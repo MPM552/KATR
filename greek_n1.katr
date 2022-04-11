@@ -1,0 +1,682 @@
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% File: greekN_1.dtr Purpose: Author: Email: Address: Version: Related files:
+% This program models part of the Ancient Greek noun system Josh Cason, 06/2009
+% joshua.aaron.cason@gmail.com 1608 University Ct. F103, Lexington, KY 40506
+% 8.7 None currently.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% % Opening Comments % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% % % % % % % % % % % % % % % % The following theory models a portion of the
+% noun system of classical Greek. The paradigms chosen are mostly from Balme
+% and Lawall's Athenaze Book 1. This work was made possible by a eUreKa
+% undergraduate research grant from the University of Kentucky with Dr. Andrew
+% Hippisley advising.
+
+% The contents of the file are ordered: % % % % % % % I. II. III. IV. V. VI.
+% VII. Variable Declarations Abstract Nodes Noun Classes Finite State
+% Transducers Paradigm Nouns Lexicon Closing Declarations
+
+% Noun classes are nodes that represent a complete paradigm for a class of
+% nouns.  Individual lexical entries are linked by default to them and only
+% provide the root and perhaps other information about the final syllable of
+% the stem. Abstract nodes are not meant to produce a complete paradigm.
+% Instead, they gather rules and patterns shared by two or more classes. The
+% paradigm nouns are regular lexical entries, but are set apart in the order of
+% the noun classes to point out path information is necessary for a noun of
+% that class, e.g., % that one must include the final coda of the stem
+% separately. General comments are indented with four spaces.  Character set:
+% The ideal is to use real Greek characters. Therefore the file must be saved
+% in Unicode format, and the DATR implementation needs to support Unicode. At
+% UK we are currently using WinDATR available from the University of Surrey
+% website: http://www.smg.surrey.ac.uk/Deponency/winDATR-2.10.11.zip
+
+% I. Variable Declarations
+%
+%
+#vars $number: sg pl.
+% Alphabetic variables
+#vars $abc: α β γ δ ε ὰ ά ἇ ἆ ἅ ὲ έ ἐ ἑ ἒ ἰ ἱ ἲ ἳ ἴ ὸ ό ὀ ὁ ὂ ῦ ῧ ύ ὺ ὗ ή ὴ ἠ ἡ ἢ ὼ ώ ὠ ὡ ὢ ζ ἄ ἓ ἵ ὃ ὖ ἣ ὣ η ἃ ἔ ἶ ὄ ὕ ἤ ὤ θ ἂ ἕ ἷ ὅ ὔ ἥ ὥ ι κ λ μ ν ξ ο π ρ ῥ σ ς τ υ φ χ ψ ω ἁ ἀ ᾶ ᾅ ᾄ ᾃ ᾂ ᾁ ᾀ ᾆ ᾇ ᾲ ᾳ ᾴ ᾷ ὶ ί ῒ ΐ ῖ ῗ ϊ ὓ ὒ ὑ ὐ ϋ ΰ ῢ ἦ ἧ ᾐ ᾑ ᾒ ᾓ ᾔ ᾕ ᾖ ᾗ ῂ ῃ ῄ ῆ ῇ ὦ ὧ ῲ ῳ ῴ ῶ ῷ ᾠ ᾡ ᾢ ᾣ ᾤ ᾥ ᾦ ᾧ .
+
+#vars $td: τ δ .
+
+% II. Abstract Nodes (Abs) These are nodes that don't stand for a whole class
+% of of nouns, but rather hold properties that two or more classes share. Where
+% a node does not inherit from the main NOUN class but from another node that
+% node is named with an extension of the name it inherits from, e.g., NODE_0A
+% inherits from NODE_0.
+
+NOUN:
+% The noun node encodes some default characteristics of nouns in general. It is
+% common enough among nouns that the nominative is equivalent to the vocative
+% regardless of number. In neuters it is common to find the nominative
+% equivalent to the accusative. Accusative is chosen as the path value because
+% it is also common that a masculine accusative is equivalent to the neuter.
+% Thus an abstraction node can hold the accusative which neuter and masculine
+% inherit, and in neuters, unless overridden, the nominative inherits from the
+% accusative and the vocative from the nominative.
+	<mor $number voc> == "<mor $number nom>"
+	<mor $number nom> == "<mor $number acc>"
+% Omega nu is a common ending for genitive plurals. For 1st declension we have
+% to give the omega a circumflex with an FST in the future. Mentioning the coda
+% is necessary because "<stem>" does not call <stem 1>. Thus, the default coda
+% is given as nothing for those nouns where a coda isn't specified.
+	<mor pl gen> == "<stem 1>" ω ν
+	<coda> ==
+% Stems which are not specified at a lower node are defaulted back to the
+% morphological root.
+	<stem> == "<mor root>"
+% The following two patterns are seen very often below.
+% Generalizing it seems to be very useful.
+	<theme stem 1> == "<stem>" "<theme vow>"
+	<theme stem 2> == "<stem>" "<theme vow sg>"
+	<sigma> == FST_SIG:<"<>" ^>
+	.
+
+% II.A. Abs 1st and 2d declensions
+NODE_0:
+	<> == NOUN
+% 1st and 2d declension nouns display the following three patterns.
+% <theme vow sg 1> is used because the μέλιττα class needs to have a different
+% singular theme vowel in this dative and the genitive forms. Of course, in all
+% other nouns this path will return the <theme vow sg> or <theme vow>.
+	<mor sg dat> == "<stem>" <"<theme vow sg 1>" iotaSub>
+	<α iotaSub> == ᾳ
+	<η iotaSub> == ῃ
+	<ο iotaSub> == ῳ
+	<mor sg acc> == <theme stem 2> ν
+% The following generalization warrants the use of <theme vow sg>. In the 1st
+% declension there are competing theme vowels. α is the default because it
+% appears in all plural paradigms and all but one of the singulars. η is the
+% value of <theme vow sg> at κρήνη, because all the singular forms appear with
+% η instead of α. Since in order to generalize the following plural form it is
+% necessary to call "<theme vow>" globally, then retreiving that value at κρήνη
+% would return a form with η instead of α where α is appropriate (i.e. in the
+% plural forms of κρήνη). But since the path is <theme vow sg> instead, <theme
+% vow> bypasses it. Yet when one calls for "<theme vow sg>" globally the value
+% returned will be that of <theme vow> when <theme vow sg> is not specified.
+% Thus the exceptional form is picked up when it is specified, otherwise the
+% plural vowel is default.
+	<mor pl dat> == <theme stem 1> ι ς
+	.
+
+% II.B. Abs 2d declension
+% δένδρον and ἄνθρωπος classes inherit the genitive singular from this class.
+% This node is separate, because NODE_0 has 1st declension daughters which do
+% not inherit this form.
+
+NODE_0A:
+	<> == NODE_0
+	<mor sg gen> == "<stem>" <theme vow> υ
+% The theme vowel is named here because it is shared by both the neuter and
+% masculine 2nd declension nodes.
+	<theme vow> == ο
+	.
+
+% II.C. Abs 3d declension In more than one class of 3d declension nouns the
+% following patterns (NODEs 1-2A) are present. Two stems are needed so that in
+% the nominative and vocative singular and dative plural the coda consonant
+% will change to the appropriate consonant for that class.
+
+NODE_1:
+	<> == NOUN
+	<mor sg gen> == "<stem 1>" ο ς
+	<mor sg dat> == "<stem 1>" ι
+	<mor pl dat> == "<stem 2>" ι ν
+	<mor pl acc> == "<stem 1>" α ς
+% Will need to ensure that there is an FST to convert to terminal sigmas. The
+% regular sigma is needed here because this equation is used for both.
+	<stem 1> == "<stem>" "<coda>"
+	<stem 2> == "<stem>" σ
+	.
+	
+NODE_1A:
+	<> == NODE_1
+% NODE_1A is separate because the noun forms of this declension add certain
+% nominative and accusative forms. Separating the two nodes allows the neuter
+% nouns to take advantage of the accusative based generalization inherited from
+% NOUN.
+	<mor sg nom> == "<stem 2>"
+	<mor sg acc> == "<stem 1>" α
+	<mor pl nom> == "<stem 1>" ε ς
+	<gender> == masc
+	.
+	
+NODE_2:
+	<> == NOUN
+% Below there was a choice whether to let the singular genitive depend on the
+% plural accusative of the 2nd declension accusative plural or not. It seemed
+% like the best choice to simply repeat the specification here since the two
+% don't even have case in common.
+	<mor sg gen> == "<stem>" ο υ ς
+	<mor sg dat> == <theme stem 1> ι
+	<mor pl dat> == NODE_1
+	<mor pl gen> == <theme stem 1> ω ν
+	<mor pl acc> == "<stem>" η
+	<stem 2> == <theme stem 1> σ
+	<theme vow> == ε
+	<theme vow sg> == υ
+	.
+	
+NODE_2A:
+	<> == NODE_2
+% NODE_2A is separate for reasons similar to those for separating NODE_1A.
+
+% Notice an interesting generalization in this node. Though the singular
+% vocatives of the many nouns which inherit from this node may differ, many of
+% the forms from those nouns build on the vocative. Also, the vocative appears
+% more than once as the theme stem 2.
+	<mor sg nom> == "<mor sg voc>" ς 
+	<mor sg gen> == <theme stem 1> ω ς 
+	<mor sg acc> == "<mor sg voc>" ν 
+	<mor sg voc> == <theme stem 2>
+	<stem 2> == "<mor sg voc>" σ
+	.
+
+% III. Noun Classes
+
+% III.A. 2d Declension Classes 2d declension nouns are the first nodes
+% mentioned in this theory that represent complete classes.
+
+% δένδρον Class
+
+CLASS_1:
+	<> == NODE_0A
+% The singular accusative is inherited from the general pattern in NOUN, and
+% the nominative and vocative inherit from it. Because of the rules that make
+% nominative and vocative inherit from the accusative in any number, all one
+% must state below is the plural accusative to take care of all three. The
+% plural genitive and dative are also inherited from general patterns at NOUN.
+	<mor pl acc> == "<stem>" α
+	<gender> == neu
+	.
+
+% ἄνθρωπος Class
+CLASS_2:
+	<> == NODE_0A
+% Interestingly, this general pattern for singular nominative is inherited by
+% the masculine nouns of the 1st declension in the same case and number, and in
+% the singular genitive of the feminine ones.
+	<mor sg nom> == <theme stem 2> ς
+	<mor sg voc> == "<stem>" ε
+% The following path captures the fact that the plural nominative of ἄνθρωπος
+% and ὑδρία (but not δένδρον) display the same pattern. The shortened <theme
+% vow> path (at ὑδρία) ensures that the singular theme vowel of κρήνη is
+% bypassed while the default from ὑδρία is inherited.
+	<mor pl nom> == CLASS_3
+	<mor pl acc> == <mor sg gen> ς
+	<gender> == masc
+	.
+
+% III.B. 1st Declension Classes
+
+% ὑδρία Class
+CLASS_3:
+	<> == NODE_0
+% The theme vowel concept has made the daughters of ὑδρία a very concise set of
+% nodes.
+%
+% α has been chosen as the default theme vowel. While η appears as a theme
+% vowel in the singular forms of all classes but one, α appears as the theme
+% vowel for the plural of all 1st declension classes and as a theme vowel in
+% the singular forms of all classes except one.
+	<mor sg nom> == <theme stem 2>
+	<mor sg gen> == "<stem>" "<theme vow sg 1>" ς
+	<mor pl nom> == <theme stem 1> ι
+	<mor pl acc> == "<stem>" <theme vow> ς
+	<theme vow> == α
+	<gender> == fem
+	.
+
+% κρήνη Class
+CLASS_4:
+	<> == CLASS_3
+% Only the <theme vow sg> is necessary for this class, because that will ensure
+% that the alpha is replaced by eta in the singular suffixes.
+	<theme vow sg> == η
+	.
+	
+% μέλιττα Class
+CLASS_5:
+	<> == CLASS_3
+% μέλιττα looks like ὑδρία except in the singular genitive and dative.
+% Therefore, in the nodes where the singular genitive and dative are specified
+% above, <theme vow sg 1> is used. Only in this node will that path extension
+% make a difference, because <theme vow> and <theme vow sg> are leading
+% subpaths to it.
+	<theme vow sg 1> == η
+	.
+
+% νεανίας Class
+CLASS_6:
+	<> == CLASS_3
+% There is an interesting generalization which applies to the following two
+% masculine nouns. The nominative singular can inherit directly from the
+% masculine of the 2nd declension. However, the nominitive singular of ἄνθρωπος
+% is ος not ας. The reason this works is that the definition of the nominitive
+% singular at ἄνθρωπος includes a theme vowel and ς. Thus, these forms are the
+% same, but they inherit a different theme vowel. The genitive is the same as
+% the 2nd declension as well, but keeps the 2nd declension theme vowel omicron.
+	<mor sg nom> == CLASS_2
+	<mor sg gen> == NODE_0A
+	<mor sg voc> == <theme stem 1>
+	<gender> == masc
+	.
+
+% δεσπότης Class
+CLASS_7:
+	<> == CLASS_6
+% δεσπότης looks nearly identical to νεανίας except that the singular forms
+% (except the vocative) use the κρήνη <theme vow sg>.
+	<theme vow sg> == CLASS_4
+	.
+
+% III.C 3d Declension Classes
+% ὄνομα Class
+CLASS_8:
+	<> == NODE_1
+% Originally this class was going to be used as the primary abstraction node
+% for several of the following classes. However, it seemed that since the
+% following path is not inherited by any of those classes, it would be best to
+% give ὄνομα a separate node. Otherwise, it would sit at a superior position in
+% the hierarchy only to be overridden by all of the daughters of its node.
+
+% Neuter 3rd declension stems ending in δ, τ, or θ
+% share this pattern
+	<mor sg acc> == "<stem>"
+	<mor pl acc> == NODE_1A:<mor sg acc>
+	<gender> == neu
+	.
+
+% κλωψ Class
+CLASS_9:
+	<> == NODE_1A
+% The secondary coda is named at the class level in the following two classes
+% in order to avoid naming them redundantly in each lecical entry. 3rd
+% declension stems ending in β, π, or φ receive this <stem 2>.
+	<stem 2> == "<stem>" ψ
+	.
+
+% φύλαξ Class
+CLASS_10:
+	<> == NODE_1A
+% 3rd declension stems ending in γ, κ, or χ receive this <stem 2>.
+	<stem 2> == "<stem>" ξ
+	.
+
+% παῖς Class
+CLASS_11:
+	<> == NODE_1A
+% 3rd declension (non-neuter) stems ending in δ, τ, or θ share this pattern.
+	<mor sg voc> == "<stem>"
+	.
+
+% γέρων Class
+CLASS_12:
+% gets <mor sg voc> from:
+	<> == CLASS_11
+% Using <mor root> below because <stem> is used. The FST utilized for this
+% class is the basis for the singular nominative and <stem> in ῥήτωρ below as
+% well.
+	<mor sg nom> == "<mor root>" FST_12:< "<rhyme>" ^ ^>
+	<stem> == "<mor root>" "<rhyme>"
+	<stem 1> == <stem> "<coda>"
+	<stem 2> == "<mor root>" FST_12:< "<rhyme>" ^> σ
+	.
+
+% ῥήτωρ Class
+CLASS_13:
+	<> == NODE_1A
+	<mor sg nom> == CLASS_12
+	<stem> == CLASS_12
+	.
+
+% χειμών Class
+CLASS_14:
+	<> == NODE_1A
+	<mor sg nom> == "<stem 1>"
+	.
+
+% ἁνήρ Class
+CLASS_15:
+	<> == NODE_1A
+% Here is another case that the FST used in one class is used in another class.
+% Interestingly, <onset 2> is the value of the FST with the argument <onset 1>.
+% (δ ρ -> ε ρ). Then the suffix of the singular nominative is the value of the
+% FST with the argument <onset 2> (ε ρ -> η ρ).
+	<onset 1> == "<stem fin onset>"
+	<onset 2> == FST_12:< <onset 1> ^>
+	<mor sg nom> == "<stem>" FST_12:< <onset 2> ^>
+	<mor sg voc> == "<stem>" <onset 2>
+	<stem 2> == "<stem>" "<onset 1>" α σ
+	<stem 1> == "<stem>" <onset 1>
+	.
+
+% πατήρ Class
+CLASS_16:
+	<> == CLASS_15
+% <onset 1> uses this part of the FST: <ε ρ> == ρ. It allows πατρος, for
+% instance, to lose the epsilon. <stem 1> is inherited from ἁνήρ where the path
+% <onset 1> is inherited locally, i.e., the value is "<stem fin>" not FST_12:<
+% "<stem fin>" >.
+	<onset 1> == FST_12:< "<stem fin>" >
+	<mor sg gen> == "<stem>" <onset 1> ο ς
+	<mor sg dat> == "<stem>" <onset 1> ι
+	<mor sg voc> == <stem 1>
+	.
+
+% τεῖχος Class
+CLASS_17:
+	<> == NODE_2
+% τεῖχος, being neuter, takes advantage of the NOUN rule that allows one to
+% state the sg or pl accusative and get the nominative and vocative forms of
+% that number by default. For this reason it seemed like the best choice, short
+% of resorting to phonological rules, to choose a dependancy where the cases
+% matched. Thus, instead of using some of the forms where ος appears in the
+% genitive, the nominative of the masculine 2nd declension is used since ος
+% appears in the nominative but not the genitive in this paradigm. This
+% required that the <theme vow sg> be defined as an omicron. This has no
+% negative consequences on the rest of the paradigm.
+	<mor sg acc> == CLASS_2:<mor sg nom>
+	<mor pl gen> == NOUN
+	<theme vow sg> == ο
+	<gender> == neu
+	.
+
+% τριήρης Class
+CLASS_18:
+	<> == CLASS_17
+% Introducing a <theme vow sg> in this paradigm appears useful. It allows the
+% nominative singular to inherit from ἄνθρωπος. It also allows other
+% generalities to inherit from NODE_2 and NOUN by default.
+	<mor sg nom> == CLASS_2
+	<mor sg acc> == <theme stem 2>
+	<mor sg voc> == <stem 2>
+	<mor pl acc> == <mor sg dat> ς
+	<theme vow sg> == η
+	<gender> == fem
+	.
+
+% ἄστυ Class
+CLASS_19:
+	<> == NODE_2
+% Like other neuter nouns, ἄστυ might have served as the abstraction node
+% itself, allowing its daughters to override its accusative forms. But, since
+% it is unique in the singular accusative, it has its own node. Moreover, ἄστυ
+% stands in between NODE_2 and 2A, because the genitive is the one
+% characteristic of NODE_2A classes, though its default inheritance is from
+% NODE_2.
+	<mor sg gen> == NODE_2A
+	<mor sg acc> == <theme stem 2>
+	<gender> == neu
+	.
+
+% πόλις Class
+CLASS_20:
+	<> == NODE_2A
+	<mor pl acc> == CLASS_18
+% for use with the plural dative:
+	<stem 2> == NODE_2
+	<theme vow sg> == ι
+	<gender> == fem
+	.
+
+% βασιλεύς Class
+CLASS_21:
+	<> == NODE_2A
+	<mor sg acc> == NODE_1A
+	<mor sg voc> == <stem 1> <theme vow sg>
+% Though it was a likely choice to let the following path inherit ης from
+% elsewhere, since that suffix is unique here among plural nominatives this
+% option seems wise.
+	<mor pl nom> == "<stem>" η ς
+	<mor pl acc> == <mor sg acc> ς
+	<stem 1> == <theme stem 1>
+	<gender> == masc
+	.
+
+% ναῦς Class
+CLASS_22:
+	<> == NODE_2A
+	<mor sg dat> == "<stem 1>" ΐ
+	<mor sg voc> == "<stem>" α <theme vow sg>
+	<mor pl nom> == NODE_1A
+	<mor pl acc> == <mor sg nom>
+	<stem 1> == "<stem>" η
+	<gender> == fem
+	.
+% βοῦς Class
+CLASS_23:
+	<> == CLASS_22
+	<mor sg gen> == NODE_1
+% Though <theme stem 2>, a more general path inherited from NOUN, is available,
+% identifying this form with its kin among the descendants of NODE_2A is more
+% relevant.
+	<mor sg voc> == NODE_2A
+	<mor pl gen> == NOUN
+	<stem 1> == "<stem>"
+	<gender> == masc
+	.
+
+% III.C.1. Irregular 3rd declension The FSTs used in the following two classes
+% are not shared between classes, but they do involve the altering of the stem.
+
+% γυνή Class
+CLASS_24:
+	<> == CLASS_10
+	<mor sg nom> == "<s1>" FST_12:< "<s2>" ^>
+	<mor sg voc> == "<stem>"
+	<gender> == fem
+	.
+
+% χείρ Class
+CLASS_25:
+	<> == NODE_1A
+	<mor sg nom> == "<stem>"
+	<stem 2> == "<onset>" FST_12:< "<rhyme>" ^> σ
+	.
+
+% IV. Finite State Transducers
+%
+% An attempt was made to limit the use of FSTs to those cases where part of the
+% stem itself needed to change and especially where that type of change could
+% be utilized more that once. The FST defined here is called FST_12, because it
+% is used at CLASS_12 for the first time.
+
+FST_12:
+	<> ==
+	<$abc> == $abc <>
+	<ν ^> == υ
+	<ο $abc ^ ^> == ω $abc
+	<δ ρ ^> == ε ρ
+	<ε ρ ^> == η ρ
+	<ε ρ> == ρ
+	<α ι ^> == η
+	<ε ι ρ ^> == ε ρ
+	.
+	
+FST_SIG:
+% FST_SIG converts regular sigmas to final sigmas (σ -> ς)
+% when the regular ends a word.
+	<> ==
+	<$abc> == $abc <>
+	<σ ^> == ς
+	.
+
+% V. Paradigm Nouns
+
+% Upon entering a new noun to the lexicon, it will be necessary to follow the
+% patterns of entry of these paradigm nouns. For instance, a CLASS_12 noun must
+% have a <mor root>, <rhyme>, and <coda>.
+
+Tree:
+	<> == CLASS_1
+	<mor root> == δ ε ν δ ρ
+	.
+	
+Man1: <> == CLASS_2
+	<mor root> == ἀ ν θ ρ ω π
+	.
+	
+WaterJug:
+	<> == CLASS_3
+	<mor root> == ὑ δ ρ ι
+	.
+	
+Spring:
+	<> == CLASS_4
+	<mor root> == κ ρ η ν
+	.
+	
+Bee:
+	<> == CLASS_5
+	<mor root> == μ ε λ ι τ τ
+	.
+
+YoungMan:
+	<> == CLASS_6
+	<mor root> == ν ε α ν ι
+	.
+	
+Master:
+	<> == CLASS_7
+	<mor root> == δ ε σ π ο τ
+	.
+	
+Name:
+	<> == CLASS_8
+	<mor root> == ὀ ν ο μ α
+	<coda> == τ
+	.
+	
+Thief:
+	<> == CLASS_9
+	<mor root> == κ λ ω
+	<coda> == π
+	.
+	
+Guard:
+	<> == CLASS_10
+	<mor root> == φ υ λ α
+	<coda> == κ
+	.
+	
+Child:
+	<> == CLASS_11
+	<mor root> == π α ι
+	<coda> == δ
+	.
+	
+OldMan:
+	<> == CLASS_12
+	<mor root> == γ ε ρ
+	<rhyme> == ο ν
+	<coda> == τ
+	.
+	
+Orator:
+	<> == CLASS_13
+	<mor root> == ῥ η τ
+	<rhyme> == ο ρ
+	.
+	
+Storm:
+	<> == CLASS_14
+	<mor root> == χ ε ι μ ω
+	<coda> == ν
+	.
+	
+ManHusband:
+	<> == CLASS_15
+	<mor root> == ἀ ν
+% <stem fin onset> uses the longer path name so that the FATHER class will
+% return related values through <stem fin>
+	<stem fin onset> == δ ρ
+	.
+	
+Father:
+	<> == CLASS_16
+	<mor root> == π α
+	<stem fin> == τ ε ρ
+	.
+
+Wall:
+	<> == CLASS_17
+	<mor root> == τ ε ι χ
+	.
+	
+Trireme:
+	<> == CLASS_18
+	<mor root> == τ ρ ι η ρ
+	.
+	
+City_1:
+	<> == CLASS_19
+	<mor root> == ἀ σ τ
+	.
+	
+City_2:
+	<> == CLASS_20
+	<mor root> == π ο λ
+	.
+	
+King:
+	<> == CLASS_21
+	<mor root> == β α σ ι λ
+	.
+	
+Ship:
+	<> == CLASS_22
+	<mor root> == ν
+	.
+	
+Ox:
+	<> == CLASS_23
+	<mor root> == β ο
+	.
+	
+Woman:
+	<> == CLASS_24
+	<mor root> == <s1> <s2>
+	<s1> == γ υ ν
+	<s2> == α ι
+	<coda> == κ
+	.
+	
+Hand:
+	<> == CLASS_25
+	<mor root> == <onset> <rhyme>
+	<onset> == χ
+	<rhyme> == ε ι ρ
+	.
+
+% VI. Lexicon This is just an example. An extensive lexicon would be included
+% in a separate file.
+
+Mother:
+	<> == CLASS_16
+	<mor root> == μ η
+	<stem fin> == τ ε ρ
+	<gender> == fem
+	.
+
+% VII. Closing Declarations (and misc)
+%
+% Hide/show and example theorems
+#hide NOUN NODE_0 NODE_0A NODE_1 NODE_1A NODE_2 NODE_2A CLASS_1 CLASS_2 CLASS_3 CLASS_4 CLASS_5 CLASS_6 CLASS_7 CLASS_8 CLASS_9 CLASS_10 CLASS_11 CLASS_12 CLASS_13 CLASS_14 CLASS_15 CLASS_16 CLASS_17 CLASS_18 CLASS_19 CLASS_20 CLASS_21 CLASS_22 CLASS_23 CLASS_24 CLASS_25 FST_12 FST_SIG .
+#vars $case: nom gen dat acc voc .
+#show <sigma mor $number $case> .
+#show <gender> .
+
+% EXAMPLE THEOREMS:
+%
+% CHILD:<sigma mor sg nom>
+% CHILD:<sigma mor sg gen>
+% CHILD:<sigma mor sg dat>
+% CHILD:<sigma mor sg acc>
+% CHILD:<sigma mor sg voc>
+% CHILD:<sigma mor pl nom>
+% CHILD:<sigma mor pl gen>
+% CHILD:<sigma mor pl dat>
+% CHILD:<sigma mor pl acc>
+% CHILD:<sigma mor pl voc>
+% CHILD:<gender> = masc

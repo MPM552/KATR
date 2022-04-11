@@ -1,0 +1,142 @@
+/*
+vim:set filetype=KATR nospell tw=10000:
+Persian verb morphology.
+Authors:
+	Raphael Finkel <raphael@cs.uky.edu>
+	Olivier Bonami <olivier.bonami@paris-sorbonne.fr>
+Date: 12/2008
+Based on
+	Olivier Bonami and Pollet Samvelian,
+	"Degrees of periphrasis in Persian conjugation",
+	Sixièmes Décembrettes, 4 décembre 2008"
+
+Copyright © Raphael Finkel 2009 raphael@cs.uky.edu  
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+*/
+
+% verb categories
+%abstract
+#vars $form: base infinitive participle finite .
+#vars $mood: realis irrealis .
+#vars $force: imperative declarative .
+#vars $tense: present past future .
+#vars $aspect: bounded unbounded .
+#vars $evidence: direct indirect .
+#vars $time: imperfect perfect .
+%concrete
+#vars $concrete: simplePresent complexPresent simpleSubjunctive complexSubjunctive simpleBoundedPast complexBoundedPast simpleUnboundedPast complexUnboundedPast complexPerfect theFuture .
+
+%general
+#vars $person: 1 2 3 .
+#vars $number: sg pl .
+#vars $polarity: positive negative .
+
+% rules {
+
+Verb: 
+	<> = TAMpolarity AspectForm Stem FormAspect SubjAgreement
+	% {present perfect $evidence $aspect} = <bounded imperfect indirect>
+	{future} = TAMpolarity xâh SubjAgreement , "<stem2>"
+	{perfect finite} = <participle perfect past> , Be:<positive finite> 
+	{simplePresent} =        <finite realis   declarative present unbounded direct imperfect>
+	{simpleSubjunctive} =    <finite irrealis declarative present unbounded direct imperfect>
+	{simpleBoundedPast} =    <finite realis   declarative past    bounded   direct imperfect>
+	{simpleUnboundedPast} =  <finite realis   declarative past    unbounded direct imperfect>
+	{theFuture} =            <finite realis   declarative future  bounded   direct imperfect>
+	{complexPresent} =       <finite realis   declarative present bounded   direct perfect>
+	{complexSubjunctive} =   <finite irrealis declarative present bounded   direct perfect>
+	{complexBoundedPast} =   <finite realis   declarative past    bounded   direct perfect>
+	{complexUnboundedPast} = <finite realis   declarative past    unbounded direct perfect>
+	{complexPerfect} =       <finite realis   declarative past    bounded   direct perfect full>
+	{theImperative}  = <imperative 2 sg finite irrealis>
+	{presentParticiple}  = <present imperfect participle positive>
+	{pastParticiple}  = <past perfect participle>
+	.
+
+TAMpolarity: % block 3
+	{negative} = na
+	{realis unbounded negative} = ne
+	{finite irrealis positive} = be
+	<> =
+	.
+
+AspectForm: % block 2
+	{realis unbounded} = mi
+	<> = 
+	.
+
+Stem: % block 1
+	<> = "<stem2>"
+	{finite} = "<stem1>"
+	{past ++} = "<stem2>" % finite past uses this, as does participle past
+	{participle} = "<stem1>"
+	.
+
+FormAspect: % block 4
+	{participle perfect} = e
+	{participle imperfect} = ande % this rule is not used
+	{infinitive} = an
+	{indirect ++} = e % this rule is not used
+	<> =
+	.
+
+SubjAgreement: % block 5
+	{finite 1 sg} = am
+	{finite 2 sg} = i
+	{finite 2 sg imperative} =
+	{finite 3 sg} = ad
+	{finite 3 sg past} = 
+	{finite 3 sg indirect} = ast
+	{finite 1 pl} = im
+	{finite 2 pl} = id
+	{finite 3 pl} = and
+	<> = 
+	.
+
+Be:
+	{stem} =
+	{stem irrealis} = bâš
+	{stem bounded past} = bud
+	{stem full ++} = bude ,
+	{ending 3 sg realis} = ast
+	{ending 3 sg full ++} = ast
+	{ending 3 sg bounded past} = 
+	{ending} = SubjAgreement
+	<> = <stem> <ending>
+	.
+
+#hide Verb Stem AspectForm TAMpolarity FormAspect SubjAgreement Be .
+
+% rules }
+
+% vocabulary {
+ 
+Buy: 
+	<stem1> = xar
+	<stem2> = <stem1> id
+	<> = Verb 
+	.
+
+% vocabulary }
+
+
+#show <$concrete $polarity $number $person> .
+#show <theImperative $polarity> .
+#show <infinitive $polarity> .
+#show <presentParticiple> .
+#show <pastParticiple $polarity> .
+

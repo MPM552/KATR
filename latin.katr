@@ -1,0 +1,495 @@
+/*
+Latin morphology.
+Authors:
+	Gregory Stump <gstump@pop.uky.edu>
+	Raphael Finkel <raphael@cs.uky.edu>
+Date: 3/2000, 7/2009
+
+Copyright © Raphael Finkel 2009 raphael@cs.uky.edu  
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+Web references:
+	http://diogenes.baylor.edu/WWWproviders/thorburn/latina.html
+
+strategy for verbs:
+
+	Each verb has a leaf node specifying its root, with a default
+	rule going to a conjugation-specific node.  The latter gives
+	some default rules for stems and a default rule going to Verb.
+	That default rule also introduces an atom (like "conj1") needed
+	occasionally later for disambiguation.	The Verb node puts together
+	the results of several "piece" rules for the stem and the suffixes.
+	The Sandhi rule is called on the final result.
+
+to do:
+
+bugs:
+	Lead:< passive infinitive > ==> d ū c e r ī should be d ū c ī .
+		% code inserted to fix, not yet checked.
+*/
+
+% kinds of sounds
+#atom I .  % epenthesis
+#vars $vowel: a e i o u I ā ē ī ō ū .
+#vars $longVowel: ā ē ī ō ū .
+#vars $unroundedVowel: a e i I ā ē ī .
+% #vars $longUnroundedVowel: $longVowel * $unroundedVowel.
+#vars $longUnroundedVowel: ā ē ī .
+#vars $consonant: b c d f g h j k l m n p q r s t v x z .
+#vars $sibilant: s .
+#vars $resonantConsonant: r l n m .
+#vars $nonSibilantConsonant: b c d f g h j k l m n p q r t v x z .
+#vars $stop: t d n m p b k g .
+	% not x, because p a a x
+% #vars $letter: $vowel + $consonant - {I}.
+#vars $letter: a e i o u ā ē ī ō ū b c d f g h j k l m n p q r s t v x z .
+% kinds of word classes
+#vars $declension: decl1 decl2 decl2us decl3 decl3i decl4 .
+#vars $conj: conj1 conj2 conj3 conj3io conj4 .
+#vars $conj34: conj3 conj3io conj4 .
+
+% verb categories
+#vars $voice: active passive .
+#vars $mood: indicative subjunctive .
+#vars $aspect: imperfective perfective .
+#vars $tense: present past future .
+#vars $number: sg pl .
+#vars $person: 1 2 3 .
+
+% noun and adjective categories
+#vars $gender: masculine feminine neuter .
+#vars $case: nominative genitive dative accusative ablative vocative .
+#vars $pos: verb adjective noun .
+ 
+#show <$voice :: $mood :: $aspect :: $tense :: $number :: $person> .
+%	#if <type> == verb #then
+%		<$voice :: $mood :: $aspect :: $tense :: $number :: $person>
+%		<$number :: imperative>
+%		<$voice :: infinitive>
+%	#elsif <type> == noun #then
+%		<$number :: $case>
+%	#elsif <type> == adjective #then
+%		<$gender :: $number :: $case>
+%	#endif
+%	.	
+
+/*
+% show rules
+#show <verb :: $voice :: $mood :: $aspect :: $tense :: $number :: $person> .
+#show <verb :: imperative :: $number> .
+#show <verb :: infinitive :: $voice> .
+#show <adjective :: $gender :: $number :: $case> .
+#show <noun :: $number :: $case> .
+*/
+
+AdjSuffix:
+	% this rule needs to be enlarged.
+	{nominative masculine sg} == u s
+	{nominative masculine pl} == ī
+	<> == someAdjSuffix
+	.
+
+% leaves: Verb forms
+
+ToBe: % This entry is an internal node, called both by Be and by Verb.
+	% this rule needs to be enlarged.
+	{passive} == !
+	{active indicative imperfective present sg 1} == s u m
+	{active indicative imperfective present pl 1} == s u m u s
+	{active indicative imperfective present pl 3} == s u n t
+	{active subjunctive imperfective present} =+= s ī SuffixPerson wordEnd
+	{active indicative imperfective present 2 sg} == e s
+	{active indicative imperfective present} =+= e s Desinence wordEnd
+	{active indicative imperfective past} =+= e r SuffixTense2 SuffixPerson wordEnd
+	{active indicative imperfective future} =+= e r SuffixTense2 SuffixPerson wordEnd
+	{active subjunctive imperfective past} =+= e s s ē SuffixPerson wordEnd
+	{active infinitive} == e s s e % special case
+	<stemPerfective> == f u
+	<stemImperfective> == e s % for imperatives
+	<> == VerbE
+	.
+% Verbs: conjugation-specific nodes
+
+#hideInternal
+#hide Verba VerbEE VerbE VerbI VerbIO .
+Verba: % conj1
+	<themeVowel> == ā
+	<stemImperfective> == "<root>" <themeVowel>
+	<stemPerfective> == <stemImperfective> v
+	<stemParticiple> == <stemImperfective> t
+	<> == Verb:<conj1>
+	.
+
+VerbEE: % conj2
+	<themeVowel> == ē
+	<stemImperfective> == "<root>" <themeVowel>
+	<stemPerfective> == "<root>" u
+	<stemParticiple> == "<root>" i t
+	<> == Verb:<conj2>
+	.
+
+VerbE: % conj3, like duco
+	<themeVowel> == I
+	{themeVowel indicative} == ē
+	<stemImperfective> == "<root>" <themeVowel>
+	{stemImperfective present} == "<root>" 
+	<stemPerfective> == "<root>" s
+	<stemParticiple> == "<root>" t
+	<> == Verb:<conj3>
+	.
+
+VerbIO: % conj3io, like facio, capio
+	{themeVowel} == i
+	{themeVowel past imperfective } == I
+	{themeVowel 2 sg present imperfective passive indicative} == I
+	{themeVowel imperative} == I
+	{themeVowel infinitive} == I
+	<stemImperfective> == "<root>" <themeVowel>
+	<stemPerfective> == AEE:<"<root>">
+	<stemParticiple> == "<root>" t
+	<> == Verb:<conj3io>
+	.
+
+AEE: % convert middle a to ē in a verb stem
+	<$letter#1 a $letter#2> == $letter#1 ē $letter#2
+	.
+
+VerbI: % conj4, like audio
+	<themeVowel> == ī
+	<stemImperfective> == "<root>" <themeVowel>
+	<stemPerfective> == <stemImperfective> v
+	<stemParticiple> == <stemImperfective> t
+	<> == Verb:<conj4>
+	.
+
+% Verbs: main node
+
+Verb: 
+	{type} == verb
+	{verb} == <>
+	<> == StemAspect SuffixTense1 SuffixTense2 SuffixPersonVoice wordEnd
+	{perfective passive $conj} == "<stemParticiple>" AdjSuffix:<nominative masculine> wordEnd , ToBe:<imperfective active>
+	% {$conj34 1 sg future/present imperfective indicative/subjunctive} =+= <>
+		% referral of future-indicative to present-subjunctive
+	{imperative sg} == "<stemImperfective imperative>" wordEnd
+	{imperative pl} == "<stemImperfective imperative>" t e wordEnd
+	{active infinitive} == "<stemImperfective infinitive>" r e wordEnd
+		% actually, infinitive ending is "s e", and Sandhi rhoticizes
+		%		<$vowel#1 s $vowel#2> == <$vowel#1 r $vowel#2>
+		% but later words don't rhoticize, so we don't use that Sandhi
+		% The only case we therefore miss is "esse", which we handle specially
+	{passive infinitive} =+= "<stemImperfective>" r ī wordEnd
+	{passive infinitive conj3} =+= "<stemImperfective>" ī wordEnd
+	{future subjunctive} == !
+	.
+
+% Verbs: piece nodes
+
+StemAspect: 
+	% need to preserve tense marker, hence =+=
+	{imperfective} =+= "<stemImperfective>"
+	{perfective} =+= "<stemPerfective>"
+	<> = 
+	.
+
+SuffixTense1: 
+	<> ==
+	{conj1 present imperfective subjunctive} == ē
+	{present imperfective subjunctive} == ā
+	{perfective} == e r % absolute neutralization of "I r"
+	{past perfective subjunctive} == i s s ē
+	{present perfective indicative} == I
+	{past imperfective indicative} == b
+	{future imperfective indicative} == b
+	{past imperfective indicative conj3io} == i ē b % capieebam
+	{past imperfective indicative conj4} == ē b % audieebam
+	{future imperfective indicative $conj34} == ē % audiēs
+	{future imperfective indicative conj3} == % ducēs; the ē is theme vowel
+	{past imperfective subjunctive} == r ē
+	{3 pl present perfective indicative} == ē r
+	{3 pl present perfective subjunctive} == e r % m o n u e r i n t
+	.
+
+SuffixTense2: 
+	<> ==
+	{past indicative} == ā
+	{present perfective subjunctive} == ī
+	.
+
+SuffixPersonVoice:  
+	<> == SuffixPerson SuffixVoice
+	{2 sg} == I SuffixVoice SuffixPerson
+	{2 pl passive} == I m i n ī
+	.
+
+SuffixVoice: 
+	<> ==
+	{passive} == r
+	{3 passive} == u <passive>
+	.
+
+SuffixPerson: 
+	<> == SuffixalVowel Desinence
+ 	{1 sg} == m
+ 	{1 sg present imperfective indicative} == ō
+ 	{1 sg future indicative} == ō
+ 	{1 sg future indicative imperfective $conj34} == m
+ 	{1 sg present perfective indicative} == ī
+	.
+
+SuffixalVowel: 
+	{future} == I
+	{present imperfective indicative} == I
+	{past imperfective subjunctive} == I
+	{3 pl +2} == u % need to artificially advance priority so this rule wins
+	{3 pl present imperfective indicative conj4} == ū
+	{3 pl future perfective active} == I
+	<> == 
+	.
+
+Desinence: 
+ 	{2 sg} == I s
+ 	{2 sg present perfective indicative} == s t ī
+ 	{3 sg} == t
+ 	{1 pl} == m u s
+ 	{2 pl} == t i s
+ 	{2 pl present perfective indicative} == s <2 pl>
+ 	{3 pl} == n t
+ 	.
+
+Noun:
+	{type} == noun
+	{noun} == <>
+	{!noun} == !
+	{} =+= "<root>" NominalSuffix wordEnd
+	.
+
+NominalSuffix: 
+	{neuter nominative/accusative ++} =+= <> % reflection
+	{vocative/nominative} =+= <> % reflection
+	{pl dative/ablative} =+= <> % reflection
+	{pl neuter accusative +1} == a % neuter rule, but: maria, cornua
+	{decl1 sg nominative} == a
+	{decl1 sg genitive} == a e
+	{decl1 sg dative} == a e
+	{decl1 sg accusative} == ā m
+	{decl1 sg ablative} == ā
+	{decl1 pl nominative} == a e
+	{decl1 pl genitive} == ā r u m
+	{decl1 pl accusative} == ā s
+	{decl1 pl ablative} == ī s
+	{decl2 sg nominative} == 
+	{decl2 sg genitive} == ī
+	{decl2 sg dative} == ō
+	{decl2 sg accusative} == u m
+	{decl2 sg ablative} == ō
+	{decl2 sg vocative} == e
+	{decl2 pl nominative} == ī
+	{decl2 pl genitive} == ō r u m
+	{decl2 pl accusative} == ō s
+	{decl2 pl ablative} == ī s
+	{decl2us sg nominative} == u s
+	{decl2us sg vocative} == e 
+	{decl2us/decl2} =+= <>
+	{decl3 sg nominative} == s
+	{decl3 sg genitive} == i s
+	{decl3 sg dative} == ī
+	{decl3 sg accusative} == I m
+	{decl3 sg ablative} == e
+	{decl3 pl nominative} == ē s
+	{decl3 pl genitive} == u m
+	{decl3 pl accusative/nominative} =+= <>
+	{decl3 pl ablative} == i b u s
+	{decl3i sg accusative neuter} == e
+	{decl3i sg ablative neuter} == ī
+	{decl3i pl genitive} == i u m
+	{decl3i pl accusative neuter ++} == i a
+	{decl3i neuter vocative/nominative} =+= <> % maria
+	{decl3i/decl3} =+= <>
+	{decl4 sg} == ū
+	{decl4 sg nominative} == u s
+	{decl4 vocative/nominative +1} =+= <>
+	{decl4 sg genitive} == ū s
+	{decl4 sg dative masculine} == u ī
+	{decl4 sg dative feminine} == u ī
+	{decl4 sg accusative masculine} == u m
+	{decl4 sg accusative feminine} == u m
+	{decl4 pl nominative} == ū s
+	{decl4 pl genitive} == ū u m
+	{decl4 pl accusative neuter +1} == ū a
+	{decl4 pl accusative} == ū s
+	{decl4 pl ablative} == i b u s
+	{decl5c/decl5} =+= <>
+	{decl5 nominative} == ē s
+	{decl5 sg genitive} == ē ī
+	{decl5 sg dative} == ē ī
+	{decl5c sg genitive} == e ī
+	{decl5c sg dative} == e ī
+	{decl5 sg accusative} == ē m
+	{decl5 sg ablative} == ē
+	{decl5 pl genitive} == ē r u m
+	{decl5 pl accusative} == ē s
+	{decl5 pl ablative} == ē b u s
+	.
+
+Adjective: 
+	{type} == adjective
+	{adjective} = <>
+	{!adjective} = !
+	{feminine} == Noun:<decl1 noun>
+	{masculine} == Noun:<decl2us noun>
+	{neuter} =+= Noun:<decl2us noun>
+	.
+
+#hide AdjectiveER .
+AdjectiveER:
+	{masculine} == Noun:<decl2>
+	<> == Adjective
+	.
+
+#sandhi s r wordEnd => r wordEnd .
+#sandhi m r wordEnd => r wordEnd .
+#sandhi $unroundedVowel I => $1 .
+#sandhi I r => e r .
+#sandhi I => i .
+#sandhi I $longUnroundedVowel => $1 .
+#sandhi I e wordEnd => e wordEnd . % capIe => cape
+#sandhi i i => i . % cap i i ē bam -> capieebam
+#sandhi i ī => ī . % cap i i ē bam -> capieebam
+#sandhi ā ō => ō .
+#sandhi ā ē => ē .
+#sandhi $longVowel i => $1 .
+#sandhi ī ē ō => i ō . % audiō
+#sandhi ē ō => e ō .
+#sandhi ē ā => e ā . % moneeām -> moneām 
+#sandhi ī ō => i ō . % audīoo -> audioo 
+#sandhi ī ē => i ē . % audīees -> audiees 
+#sandhi ī ā => i ā . % audīām -> audiām 
+#sandhi ī ū => i ū . % audīūnt -> audiūnt
+#sandhi ū $vowel => u $1 . % frūctū-um -> frūctu-um; cornūa
+#sandhi ā $nonSibilantConsonant wordEnd => a $1 .
+#sandhi ē $nonSibilantConsonant wordEnd => e $1 .
+#sandhi ī $nonSibilantConsonant wordEnd => i $1 .
+#sandhi ō $nonSibilantConsonant wordEnd => o $1 .
+#sandhi ū $nonSibilantConsonant wordEnd => u $1 .
+#sandhi $longUnroundedVowel u => $1 .  % dūceebāunt -> dūceebānt 
+#sandhi ā $stop $stop => a $1 $2 .
+#sandhi ē $stop $stop => e $1 $2 .
+#sandhi ī $stop $stop => i $1 $2 .
+#sandhi ō $stop $stop => o $1 $2 .
+#sandhi ū $stop $stop => u $1 $2 .
+#sandhi c s => x . % spelling rule
+#sandhi g s => c s . % should generalize
+#sandhi $consonant r wordEnd => $1 e r wordEnd . % spelling, not Sandhi
+#sandhi wordEnd => . % default
+
+/*
+% vocabulary {
+
+% Nouns
+
+Pirate:
+	<root> = p ī r a t
+	{} =+= Noun:<decl1>
+	.
+
+Pole:
+	<root> = p ō l
+	{} =+= Noun:<decl2>
+	.
+
+Poison:
+	<root> = v ī r
+	{} =+= Noun:<decl2 neuter>
+	.
+
+City:
+	<root> == u r b
+	{} =+= Noun:<decl3i>
+	.
+
+Sea:
+	<root> == m a r
+	{} =+= Noun:<decl3i neuter>
+	.
+
+Horn:
+	<root> == c o r n
+	{} =+= Noun:<decl4 neuter>
+	.
+
+Fruit:
+	<root> == f r ū c t
+	{} =+= Noun:<decl4>
+	.
+
+Day:
+	<root> == d i
+	{} =+= Noun:<decl5>
+	.
+
+Thing:
+	<root> == r
+	{} =+= Noun:<decl5c>
+	.
+
+% verbs
+
+Be:
+	<> == ToBe
+	.
+
+Praise: 
+	<root> == l a u d
+	<> == Verba
+	.
+
+Warn:
+	<root> == m o n
+	<> == VerbEE
+	.
+
+Lead:
+	<root> == d ū c
+	<> == VerbE
+	{sg imperative} == <root> % special case for this verb only
+	.
+
+Grab:
+	<root> == c a p
+	<> == VerbIO
+	.
+
+Hear: 
+	<root> == a u d
+	<> == VerbI
+	.
+
+% adjectives
+
+Good:
+	<root> == b ō n
+	<> == Adjective
+	.
+
+Pretty:
+	<root> == p u l c h r
+	<> == AdjectiveER
+	.
+
+% vocabulary } /* */
+
+% vim:set filetype=KATR nospell:

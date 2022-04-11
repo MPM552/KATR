@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<title>KATR</title>
+	<link href="generalstyle.css" rel="stylesheet" type="text/css" />
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+</head>
+
+<body>
+
+<center><table><tr>
+	<td><table>
+		<!--
+		<tr><td><h1>Cats Claw</h1></td></tr>
+		<tr><td><h2>Computer-Assisted Technology Service</h2></td></tr>
+		<tr><td><h2>Computational Linguist's Automated Workbench</h2></td></tr>
+		-->
+		<tr><td style='
+			font-family:Sans-serif; font-size:30px; text-align:center;'>
+		<span style='color:#08388d; font-size:40px;'>Cats Claw</span><br/>
+		<span style='color:#4e658d;'>
+		<span style='color:#08388d;'>C</span>omputer-<span
+		style='color:#08388d;'>A</span>ssisted <span
+		style='color:#08388d;'>T</span>echnology
+		<span style='color:#08388d;'>S</span>ervice<br/>
+		<span style='color:#08388d;'>C</span>omputational <span
+		style='color:#08388d;'>L</span>inguist's <span
+		style='color:#08388d;'>A</span>utomated <span
+		style='color:#08388d;'>W</span>orkbench</span>
+		</td></tr>
+	</table></td>
+	<td><img src="kentucky_wildcats.gif" alt="logo"/></td>
+</tr></table>
+</center>
+<center><h1>KATR evaluator</h1></center>
+<form
+	action="cgi-bin/katr.cgi"
+	accept-charset="UTF-8"
+	method="post" enctype="multipart/form-data">
+	Either enter your KATR theory here:
+	<textarea name="Text" rows="10" cols="50"></textarea>
+	<br/>
+	or upload from a file:
+	<input type="file" name="File" size="40"/>
+	<br/>
+	<input type="checkbox" name="noFormat"/> List results instead of fancy
+	formatting
+	<br/>
+	<input type="checkbox" name="compare"/> Compare against a given file
+		<input type="file" name="compareFile" size="40"/>
+	<br/>
+	<input type="submit" value="submit"/>
+	<input type="reset" value="reset"/>
+</form>
+<br/>
+<h2>Some KATR theories and their output</h2>
+<table summary="theories">
+<tr><td>Shughni</td>
+    <td><a href="shughni.katr">theory</a></td>
+	<td><a href="shughni.utf8.html">output</a></td>
+	<td><a href="cgi-bin/shughniDict.cgi">interactive</a></td>
+</tr><tr><td>Bartangi</td>
+    <td><a href="bartang.katr">theory</a></td>
+	<td><a href="bartang.utf8.html">output</a></td>
+	<td><a href="cgi-bin/bartangDict.cgi">interactive</a></td>
+</tr><tr><td>Garifuna</td>
+    <td><a href="garifuna.katr">theory</a></td>
+	<td><a href="garifuna.utf8.html">output</a></td>
+</tr><tr><td>Totonac</td>
+    <td><a href="totonac.katr">theory</a></td>
+	<td><a href="totonac.utf8.html">output</a></td>
+</tr><tr><td>Persian</td>
+    <td><a href="persian.katr">theory</a></td>
+	<td><a href="persian.utf8.html">output</a></td>
+</tr><tr><td>Yorùbá</td>
+    <td><a href="yoruba.katr">theory</a></td>
+	<td><a href="yoruba.utf8.html">output</a></td>
+</tr><tr><td>Latin</td>
+    <td><a href="latin.katr">theory</a></td>
+	<td><a href="latin.utf8.html">output</a></td>
+	<td><a href="latinMorphology.utf8.html">interactive</a></td>
+</tr><tr><td>Irish</td>
+    <td><a href="irish.katr">theory</a></td>
+	<td><a href="irish.utf8.html">output</a></td>
+	<td><a href="cgi-bin/irish.cgi">interactive</a></td>
+</tr><tr><td>Hebrew</td>
+    <td><a href="hebrew.katr">theory</a></td>
+	<td></td>
+	<td><a href="hebrewMorphology.utf8.html">interactive</a></td>
+</tr><tr><td>Slovak</td>
+    <td><a href="slovak.katr">theory</a></td>
+	<td><a href="slovak.utf8.html">output</a></td>
+	<td></td>
+</tr><tr><td>Greek nouns</td>
+    <td><a href="greek_n1.katr">theory</a></td>
+	<td><a href="greek_n1.utf8.html">output</a></td>
+	<td></td>
+</tr><tr><td>Nepali verbs</td>
+    <td><a href="nepali.katr">theory</a></td>
+	<td></td>
+	<td></td>
+</tr><tr><td>Luo verbs</td>
+    <td><a href="luo.katr">theory</a></td>
+	<td></td>
+	<td></td>
+</tr><tr><td>Skolt Saami verbs</td>
+    <td><a href="skoltSaami.katr">theory</a></td>
+	<td><a href="skoltSaami.utf8.html">output</a></td>
+	<td><a href="cgi-bin/skoltSaami.cgi">interactive</a></td>
+</tr><tr><td>Nuer verbs</td>
+    <td><a href="nuer.katr">theory</a></td>
+	<td><a href="nuer.utf8.html">output</a></td>
+	<td><a href="cgi-bin/nuer.cgi">interactive</a></td>
+	<td></td>
+</tr></table>
+</body>
+</html>

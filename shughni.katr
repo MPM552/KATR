@@ -1,0 +1,287 @@
+/* vim:filetype=KATR keymap=shughni tw=10000 delcombine nospell:
+In KATR
+Shughni morphology.
+Authors:
+	Gregory Stump <gstump@pop.uky.edu>
+	Raphael Finkel <raphael@cs.uky.edu>
+	Andrew Hippisley <andrew.hippisley@uky.edu>
+Date: started 7/2008
+
+Copyright © Raphael Finkel 2009 raphael@cs.uky.edu  
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Verbs in class "short" do not use an enclitic in 3 sg !present middle.
+
+*/
+
+#hideInternal .
+#vars $tense: present past perfect pluperfect future .
+	#vars $nonPast: present future .
+	#vars $somePast: past perfect pluperfect .
+#vars $number: sg pl .
+#vars $person: 1 2 3 .
+#vars $gender: masc fem .
+#vars $voice: active middle passive .
+#vars $sign: positive negative .
+
+#vars $letter: a e k t c ā ê l θ č b ž m u š w z n ū ɣ v ʒ o ů ɣ̌ g i p f q d ī r x ǰ ð y s x̌ h  .
+	#vars $vowel: a e ā ê u ū o i ī .
+	#vars $voiced: b ž z ɣ ɣ̌ v ʒ g d ǰ ð y a e ā ê u ū ů o i ī .
+		% (obstruents and vowels) used in sandhi
+
+/* pronuciation key (into IPA), omitting obvious letters
+(k, t, l, b, m, z, p, f, d, s, h, w, n, v, g)
+
+a [ɑ]
+e [ɪ]
+c [ʦ]
+ā [aː]
+ê [ɛ]
+θ [θ]
+č [tʃ]
+ž [ʒ]
+u [ɔ]
+š [ʃ]
+ū [u]
+ɣ [ʁ]
+ɣ̌ [ɣ]
+ʒ [ʣ]
+o [o]
+ů [ʉ]
+i [ə] (unstressed) [ɨ] (stressed)
+q [q]
+ī [i]
+r [ɹ] (at least sometimes)
+x [χ]
+x̌ [x]
+ǰ [ʤ]
+ð [ð]
+y [j]
+
+*/
+
+
+/* { vocabulary
+
+See:  % class A
+	<stemPresent> = w i n 
+	<stemPast> = w ī n
+	<> = Verb:<transitive>
+	.
+
+Knit: % class A
+	{stemPresent} = w ā f
+	{stemPresent 3 sg} = w o f
+	<stemPast> = w ī f
+	<> = Verb:<transitive>
+	.
+
+SitDown:  % class M
+	{stemPresent} = n i θ
+	{stemInfinitive} == n i s
+	{stemPast masc sg} = n ū s
+	{stemPast} = n o s
+	% The following are more modern forms (Gulnoro)
+	{stemPerfect} = n ī s
+	{stemPerfect masc sg} = n ū s
+	% end of modern forms (Gulnoro)
+	<> = Verb:<short intransitive>
+	.
+
+Seat: % class A
+	{stemPresent} = n ê ð 
+	{markerPerfect} = č
+	<> = Verb:<short transitive>
+	.
+
+Steal: % class A
+	<stemPresent> = c i f
+	<> = Verb:<transitive>
+	.
+
+Gather: % pick up, gather; class A
+	<stemPresent> = c ê v
+	<> = Verb:<transitive>
+	.
+
+Break: % a filament; class M
+	{stemPast} = z i d u x̌ 
+	{stemPast fem sg 3} = z i d a x̌ 
+	{stemInfinitive} = z i d i x̌
+	{stemPresent} = z i d e r ð
+	{markerPerfect} = č
+	<> = Verb:<short transitive>
+	.
+
+BeExausted: % a filament; class M
+	{stemPast} = z i d a x̌ 
+	{stemPast masc} = z i d u x̌ 
+	{stemInfinitive} = z i d i x̌
+	{stemPresent} = z i d e r ð
+	{markerPerfect} = č
+	<> = Verb:<short intransitive>
+	.
+
+Eat:
+	{stemInfinitive} = x i d
+	{stemPresent} = x ā r 
+	{stemPresent 3 sg} = x i r
+	{stemPast} = x ū d
+	{stemPerfect} = x ū ɣ
+	<> = Verb:<transitive>
+	.
+
+Speak:
+	<stemPresent> = l ů v
+	{stemPast} = l ů d
+	{stemPerfect} = l ů v
+	<> = Verb:<intransitive>
+	.
+
+Be: 
+	{stemPresent} = v ā r
+	{stemPresent sg 3} = v i r
+	{stemPast} = v a d 
+	{stemPast masc sg} = v u d 
+	{stemPerfect masc sg} = v u ð % Mavluda
+	{stemPerfect} = v i c
+	{stemInfinitive} = v i d
+	{markerPerfect} = č
+	% {present} = ! % Mavluda says that there is a present
+	<> = Verb:<short intransitive>
+	.
+
+% #hide See SitDown Seat Steal Gather Break Eat Speak Be .
+% #hide See Steal Gather Break Eat Speak .
+
+%  vocabulary }
+/* */
+
+#hide Verb Enclitic Pronoun DirectObject .
+
+DirectObject: 
+	% {active} = wam , vāx̌ ,% the rope
+	% {active} = wi , vorǰ , % the horse
+	{active} = [ wam , x̌itur ] , % the camel
+	{middle} = 
+	.
+
+Verb: 
+	{!intransitive middle ++} = !
+	{!transitive active ++} = !
+	{!transitive passive ++} = !
+	{imperative} == DirectObject Negator "<stemImperative>" ImperativeSuffix
+	{present} = Pronoun , DirectObject "<stemPresent>" Enclitic
+	{future} = Pronoun , t a , DirectObject "<stemPresent>" Enclitic
+	{passive} = ! % no passive but the past, and even that seems uncertain.
+	{past} = Pronoun Enclitic , DirectObject "<stemPast>" - t
+	{perfect active} = Pronoun Enclitic , DirectObject "<stemPerfect masc sg>" - "<markerPerfect>"
+	{perfect middle} = Pronoun Enclitic , "<stemPerfect>" - "<markerPerfect>"
+	{pluperfect active} = Pronoun Enclitic , DirectObject "<stemPluperfect masc sg>" - "<markerPerfect>" - a t
+	{pluperfect middle} = Pronoun Enclitic , "<stemPluperfect>" - "<markerPerfect>" - a t
+	{markerPerfect short} = c 
+	{markerPerfect} = č
+	{markerPerfect masc sg} = č
+	{infinitive} = "<stemInfinitive>" - t o w 
+	{stemPast} == "<stemPresent>"
+	{stemPerfect} == "<stemPast>"
+	{stemInfinitive} == "<stemPast>"
+	{stemPluperfect} == "<stemPerfect>"
+	{stemImperative} == "<stemPresent>"
+	.
+
+Enclitic: 
+	{1 sg} == - u m 
+	{2 sg $nonPast} == - i
+	{3 sg $nonPast} == - t
+	{2 sg } == - a t
+	{3 sg } == - i
+	{3 sg $somePast middle short} == 
+	{1 pl} == - ā m % Muqbil.  Others have - a m 
+	{2 pl} == - e t
+	{3 pl} == - e n
+	.
+
+Pronoun: 
+	{1 sg} == w u z
+	{2 sg} == t u
+	{3 sg masc} == y u
+	{3 sg fem} == y ā
+	{1 pl} == m ā š
+	{2 pl} == t a m a
+	{3 pl} == w ā ð
+	.
+
+Negator: % for imperatives; for indicatives, it's "na" before the verb.
+	{negative} = m ā ,
+	<> =
+	.
+
+ImperativeSuffix:
+	{pl} = - e t
+	{} = 
+	.
+
+#show <infinitive> .
+#show <$voice :: imperative :: $sign :: $number> .
+#show <$voice :: $tense :: $number :: $person :: $gender> .
+
+#sandhi i - a => i - . % example?
+% #sandhi $vowel $vowel => $1 y $2 .
+% #sandhi a - $vowel => a - w $1 . % sa-um => sa-wum
+#sandhi $vowel - $vowel => $1 - y $2 .
+#sandhi $voiced - t => $1 - d .
+#sandhi $voiced - č => $1 - ǰ .
+#sandhi $voiced - c => $1 - ʒ .
+% #sandhi ī v - ǰ => ī v - ʒ . % wirīvʒ
+#sandhi t - t => t . % yat-t => yat
+#sandhi c - č => c . % pic-č => pic
+% #sandhi + => .
+#sandhi d - d => d - .
+#sandhi d - t => d - .
+#sandhi v - u => - .
+
+#alternative t u - y a t => t u - t . % tu-yat => tu-t
+#alternative i - y u m => ī - m. % pi-yum => pīm
+% #alternative $letter* a - w u m => $1 ā - m. % sa-wum => sām
+#alternative $letter ā r$ => $1 a . % vār => va (Gulnoro)
+% #alternative $letter ā r - e t => $1 e t . % vār-et => vet
+#vars $weakConsonant: w r y .
+#vars $strongVowel: ā a i .
+% note: we may need to separate the following rules to force saw-um => sām
+#alternative $letter* $strongVowel $weakConsonant - u $letter => $1 $2 $4 . % sāw-um => sām
+#alternative $letter* $strongVowel $weakConsonant - e $letter => $1 e $4 . % sāw-et => set
+#alternative $letter* $strongVowel - y e $letter => $1 - e $3 . % rimi-yet => rim-et
+
+
+% Go:  
+% 	<stemPresent> = s a w
+% 	{stemPresent sg 3} = s ů d
+% 	{stemImperative sg} = s a
+% 	{stemPast masc sg} = s u
+% 	{stemPast} = s a
+% 	{stemInfinitive} = s i
+% 	{stemPerfect} = s i
+% 	{stemPerfect masc sg} = s u ð
+% 	<> = Verb:<short intransitive>
+% 	.
+% 
+
+% Speak:
+% 	<stemPresent> = l ů v
+% 	{stemPast} = l ů 
+% 	{stemPerfect} = l ů v
+% 	<> = Verb:<intransitive>
+% 	.

@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<title>Hebrew Verb Morphology</title>
+	<link href="/~raphael/generalstyle.css" rel="stylesheet" type="text/css" />
+	<link rel='icon' href='kentucky_wildcats.ico'/>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+	<script type='text/javascript'>
+
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-38138916-1']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
+
+	</script>
+</head>
+
+<body>
+<center><h1>Hebrew verb morphology generator</h1></center>
+<form
+	action="hebrewMorphology.cgi"
+	method="post"
+	accept-charset="UTF-8"
+>
+	Root:
+		<input type="text" size="1" maxlength="2" name="letter1"/>
+		<input type="text" size="2" maxlength="2" name="letter2"/>
+		<input type="text" size="2" maxlength="2" name="letter3"/>
+	<br/>
+	Binyan (check all that apply):
+		<input type="checkbox" name="binyan" value="QAL1" checked="checked" />
+			Qal |
+		<input type="checkbox" name="binyan" value="QAL2"/> Qal2 |
+		<input type="checkbox" name="binyan" value="QAL3"/> Qal3 |
+		<input type="checkbox" name="binyan" value="NIPHAL"/> Niphal |
+		<input type="checkbox" name="binyan" value="PIEL"/> Piel |
+		<input type="checkbox" name="binyan" value="PUAL"/> Pual |
+		<input type="checkbox" name="binyan" value="HIPHIL"/> Hiphil |
+		<input type="checkbox" name="binyan" value="HOPHAL"/> Hophal |
+		<input type="checkbox" name="binyan" value="HITHPAEL"/> Hithpael 
+	<br/>
+	Context:
+		<input type="radio" name="context" value="normal"
+			checked="checked"/> Normal |
+		<input type="radio" name="context" value="pausal"/> Pausal |
+		<input type="radio" name="context" value="connected"/> Connected 
+	<br/>
+	<input type="submit" value="submit"/>
+</form>
+<h2>Instructions</h2>
+<ol><li>
+Use English characters for the root (upper or lower case).  Here is a table of
+equivalences.  Some Hebrew letters use two English letters.
+<table border="1"><tr>
+	<td>A</td><td>B</td><td>G</td><td>D</td><td>H</td><td>W</td><td>Z</td>
+	<td>HH</td><td>T</td><td>Y</td><td>K</td><td>L</td><td>M</td><td>N</td>
+	<td>S</td><td>E</td><td>P or F</td><td>C</td><td>Q</td><td>R</td>
+	<td>SH</td><td>SS</td><td>TT</td> </tr><tr>
+	<td>א</td><td>ב</td><td>ג</td><td>ד</td><td>ה</td><td>ו</td><td>ז</td>
+	<td align="center">ח</td><td>ט</td><td>י</td><td>כ</td><td>ל</td><td>מ</td><td>נ</td>
+	<td>ס</td><td>ע</td><td align="center">פ</td><td>צ</td><td>ק</td><td>ר</td>
+	<td align="center">שׁ</td><td align="center">שׂ</td><td align="center">ת</td>
+	</tr></table>
+</li><li>
+For verbs like לראות that traditionally are considered to have ה as their third
+letter, use י instead.  Reserve final ה for cases like גבה, which have a true
+final ה.
+</li><li>
+Verbs whose first letter is apparently י usually actually start with ו.  For
+instance, you want ושב instead of ישב.
+Sometimes, though, they actually do start with י, as in יטב (found in Hiphil).
+</li><li>
+Some roots use particularly strong or weak forms of letters.  For example,
+לקח has a weak ל, which elides with the following letter in forms like אֶקַּח.
+Here is a table of special versions of letters.
+<table border="1">
+	<tr><td>use</td><td>to mean</td><td>as in</td>
+		<td>to get form</td><td>instead of</td></tr>
+	<tr><td>L-</td><td align="center">weak ל</td><td align="right">לקח</td>
+		<td align="right">אֶקַּח</td><td align="right">אֶלְכַּח</td></tr>
+	<tr><td>NN</td><td align="center">strong נ</td><td align="right">זקנ</td>
+		<td align="right">זָקַֽנְתִּי</td><td align="right">זָקַֽתִּי</td></tr>
+	<tr><td>WW</td><td align="center">strong ו</td><td align="right">מצו</td>
+		<td align="right">צִװָּה</td><td align="right">צוֹיֵ</td></tr>
+</table>
+</li><li>
+The program already knows some roots and introduces strong and weak letters.
+To prevent this substitution, add ! to any of the root letters.
+</li><li>
+The output marks non-ultimate accents with a zakef katan (as in א֔).
+It marks shwa-na (moving shwa) with a rafe over the letter (as in טֿ).
+</li><li>
+The Qal binyan has three varieties.  You usually want ordinary Qal.  However, 
+the root כבד follows Qal2, and the root קטן follows Qal3.  The
+difference has to do with the second vowel in the imperfect.
+</li><li>
+The pausal context is used in Biblical Hebrew on the siluk and ethnakhta tropes, and
+occasionally on other tropes.
+</li><li>
+The connected context is used in Biblical Hebrew when the verb is connected by a
+makef to the following word.
+</li></ol>
+Send comments and suggestions (and errors!) to
+Raphael Finkel &lt;raphael at cs.uky.edu&gt;
+<p>
+The method we use is discussed in 
+Raphael Finkel and Gregory Stump,
+<span style="font-style:italic">
+<a href="http://dx.doi.org/10.1093/llc/fqm004">
+A default inheritance hierarchy for computing Hebrew verb
+morphology</a></span>,
+<span style="font-weight:bold">Literary and Linguistic Computing 22</span>,
+2, pages 117-136, 2007.
+</p>
+
+</body>
+</html>

@@ -1,0 +1,438 @@
+/*
+Skolt Saami, 
+Uralic > Finno-Ugric > Finnic > Saamic > Eastern Saamic > Skolt Saami
+Based on Tim Feist:
+  % Morphophonological complexity in Skolt Saami verbal inflection
+  % (presentation)
+and on Tim Feist:
+  % A Grammar of Skolt Saami (PhD thesis)
+  % https://www.escholar.manchester.ac.uk/uk-ac-man-scw:123128
+Coded 2/2016 Raphael Finkel
+© Creative Commons
+Class 1: single stress group, stem ends in geminate cons or cons cluster.
+	Examples: joorr-âd (revolve), kuärŋŋ-ad (climb), põssõõčč-âd (wash clothes)
+Class 2: stem ends in non-clustered consonants that require epenthesis
+	Examples: mainst-ed (tell), västtl-ed (slap), näärv-ed (wait)
+Class 3: stem ends in -j
+	Examples: rätkkj-ed (separate), võ'll'j-ed (jump), sedggj-ed (be dimly seen)
+	All are in group C
+Class 4: stem ends in -e
+	Examples: silte-ed (be able), kârre-ed (curse), ää've-ed (open)
+Group A: theme is â, vowels are high, no palatalization in infinitive
+Group B: theme is a, vowels are low, no palatalization in infinitive
+Group C: theme is e, vowels are either, palatalization in infinitive
+*/
+
+#hideInternal .
+#atom E . % insert epenthetic next letter (the theme vowel) or - <next> d
+#atom U . % replace final j with u (or e if stem is palatalized)
+#atom N . % remove any palatalization before N
+#atom O . % the explicitly low form of u, as opposed to the high form of å
+#atom OO . % long form of O
+#atom B . % boundary before a suffix
+
+SUFFIX: % mostly table 23 p. 120
+	<opt class2> = "<theme>" ' % page 122 top: class 2 and 3 in potential and cond
+	<opt class3> = "<theme>" '
+	<opt class4> = ' % no need for epenthetic theme vowel, but still palatalization
+	<opt> = 
+	{present     1 sg} = a m
+	{present     2 sg} = a k
+	{present     3 sg} = E a
+	{present     1 pl} = "<theme>" p
+	{present     2 pl class1} = v e' t e d
+	{present     2 pl} = e' p e d
+	{present     2 pl class4} = ' p e d % page 122
+	{present     3 pl class1 groupB} = a
+	{present     3 pl} = e
+	{present     4   } = "<theme>" t
+	{past        1 sg} = e m
+	{past        1 sg class1 groupB} = u m
+	{past        2 sg} = i ǩ
+	{past        2 sg class1 groupB} = u k
+	{past        3 sg} = i
+	{past        3 sg class1 groupB} = a i
+	{past        1 pl} = i m
+	{past        1 pl class1 groupB} = a i m
+	{past        2 pl} = i d
+	{past        2 pl class1 groupB} = a i d
+	{past        3 pl} = e
+	{past        3 pl class1 groupB} = u
+	{past        4   } = e š
+	{past        4    class1 groupB} = u š
+	{potential   1 sg} = <opt> ž e m
+	{potential   2 sg} = <opt> ž i ǩ
+	{potential   3 sg} = "<theme>" ž
+	{potential   1 pl} = <opt> ž e p
+	{potential   1 pl} = <opt> ž e p
+	{potential   2 pl} = <opt> ž i d
+	{potential   3 pl} = <opt> ž e
+	{potential   4   } = <opt> ž e t
+	{conditional 1 sg} = <opt> č e m
+	{conditional 2 sg} = <opt> č i ǩ
+	{conditional 3 sg} = <opt> č i
+	{conditional 1 pl} = <opt> č i m
+	{conditional 2 pl} = <opt> č i d
+	{conditional 3 pl} = <opt> č e
+	{conditional 4   } = <opt> č e š
+	{imperative  1 sg} = % missing, but make it null for chart
+	{imperative  2 sg class1} =
+	{imperative  2 sg class2} = E "<theme>"
+	{imperative  2 sg class3} = U
+	{imperative  2 sg class4} = E "<theme>"
+	{imperative  3 sg class1} = a s
+	{imperative  3 sg} = â â ǥ ǥ a s
+	{imperative  1 pl class1} = "<theme>" p
+	{imperative  1 pl} = â k a p
+	{imperative  2 pl class1} = "<theme>" d
+	{imperative  2 pl} = e ' ǩ e d % in some class 3 and class 4 verbs: e d
+	{imperative  2 pl class4} = ' ǩ e d % page 122
+	{imperative  3 pl class1} = a z
+	{imperative  3 pl} = â k a z
+	.
+
+GRADE: % Table 27 p. 125; only applies to class1 verbs
+	{class1 present      1 sg}      = "<weak>"
+	{class1 present      2 sg}      = "<weak>"
+	{class1 present      3 sg}      = "<basic>"
+	{class1 present      1 pl}      = "<basic>"
+	{class1 present      2 pl}      = "<basic>"
+	{class1 present      3 pl}      = "<strong>"
+	{class1 present      4   }      = "<weak>"
+	{class1 past         1 sg}      = "<strong>"
+	{class1 past         2 sg}      = "<strong>"
+	{class1 past         3 sg}      = "<weak>"
+	{class1 past         1 pl}      = "<weak>"
+	{class1 past         2 pl}      = "<weak>"
+	{class1 past         3 pl}      = "<strong>"
+	{class1 past         4   }      = "<strong>"
+	{class1 potential}              = "<weak>"
+	{class1 conditional}            = "<weak>"
+	{       imperative   1 sg}      = 
+	{class1 imperative   2 sg}      = "<weak>"
+	{class1 imperative   3 sg}      = "<weak>"
+	{class1 imperative   1 pl}      = "<basic>"
+	{class1 imperative   2 pl}      = "<basic>"
+	{class1 imperative   3 pl}      = "<strong>"
+	{} = "<basic>"
+	.
+
+HEIGHT:
+	{class1 present 3} = ↓
+	{class1 past 1 sg} = ↑
+	{class1 past 2 sg} = ↑
+	{class1 past 3 pl} = ↑
+	{class1 groupC past +2} = ↑ % table 30 p 126
+	{class1 groupC potential} = ↑ % table 30 p 126
+	{class1 past 4} = ↑
+	{class1 imperative 3} = ↓ 
+	{class1 imperative 3 sg disyllabic} = % p 129
+	{} =
+	.
+
+PALATALIZE:
+	{class1 groupC present sg !4} = N % table 30 p 126
+	{class1 groupA present 3 pl} = ⇁ % table 29 p. 126
+	{class1 groupA past 1 sg} = ⇁ % table 29 p. 126
+	{class1 groupA past 2 sg} = ⇁ % table 29 p. 126
+	{class1 groupA past 3 pl} = ⇁ % table 29 p. 126
+	{class1 groupA past 4} = ⇁ % table 29 p. 126
+	{class1 groupC conditional} = N % table 30 p 126
+	{class1 groupC imperative 3} = N % table 30 p 126
+	{} =
+	.
+
+PARTICIPLE: % suffix: table 26 p. 123. grade, palatal, height: table 36 p. 130
+	{action} = "<basic>" "<theme>" m
+	{present} = "<basic>" e e i 
+	{present class1} = "<basic>" i 
+	{present class1 groupC} = "<basic>" ↑ i 
+	{past} = "<basic>" B a m
+	{past class1 groupA} = "<basic>" â m
+	{past class1 groupC} = "<basic>" N â m
+	{passive} = "<strong>" u m
+	{passive class1 groupB} = "<strong>" ↑ u m
+	{passive class1 groupC} = "<strong>" ↑ N u m
+	{passive class4} = "<strong>" u m m u % also some class 2 and class 3: p 123
+	{progressive} = "<basic>" e ' m m e n
+	{progressive class1} = "<basic>" m e n
+	{temporal} = "<weak>" e e n
+	{instrumental} = "<strong>" e e ' l % Table 36 shows <weak>
+	{abessive} = "<weak>" e ǩ â n i
+	{abessive class1} = "<weak>" ǩ â n i
+	.
+	
+VERB:
+	<> = GRADE PALATALIZE HEIGHT B SUFFIX
+	{infinitive} = "<basic>" <theme> d
+	{participle} = PARTICIPLE
+	{theme groupA} = â
+	{theme groupB} = a 
+	{theme groupC} = e 
+	{strong} = "<basic>"
+	{weak} = "<basic>"
+	.
+
+/* { lexicon 
+
+Hear:
+	% p 115 Table 20 finite forms verified
+	% p 116 Table 21 participles BUG: PART.ABESSIVE kuulkani, I show kuulǩâni
+	% p 127 Table 31 finite stems verified
+	% IMP.2sg p 42 kuul verified
+	% not to be confused with kuuleed, "to hear often".
+	{basic} = k uu ll
+	{weak} = k uu l
+	{strong} = k u ll
+	<> = VERB:<class1 groupA>
+	.
+
+DressSelf:
+	% p 129 Table 35 verified
+	% PST.3SG p 295 (141a) teâvõõđi verified
+	% PST.PART p 301 (151) teâvõõttâm verified
+	{basic} = t e â v õõ tt 
+	{weak} = t e â v õõ đ
+	{strong} = t e â v õ tt
+	<> = VERB:<class1 groupA disyllabic>
+	.
+
+Revolve:
+	% p 118 for class1 groupA
+	% uncertain if o (high) or O (low)
+	% no other forms to verify
+	{basic} = j oo r r
+	{weak} = j oo r 
+	{strong} = j o r r
+	<> = VERB:<class1 groupA>
+	.
+
+Climb:
+	% p 118 for class1 groupB verified
+	% IMP.3PL p 330 kuärŋŋaz verified
+	{basic} = k u ä r ŋŋ
+	{weak} = k u ä r ŋ 
+	{strong} = k u ä r ŋŋ 
+	<> = VERB:<class1 groupB>
+	.
+
+Whistle:
+	% p 128 Table 32 finite stems verified
+	% INF p 332 (217) njorggad verified
+	% PRS.3SG p 355 (253) p 371 (2.3) njorgg verified
+	% PART.ACTIVE p 372 (2.7) njorggam verified
+	{basic} = n j O r gg
+	{weak} = n j OO r ǥ
+	{strong} = <basic> % p 103-104: consonant center = cluster => two stems
+	<> = VERB:<class1 groupB>
+	.
+
+Leave:
+	% INF p 233 (36) p 337 (225b) vue'lǧǧed
+	% PRS.1SG p 127 vuâlǥam
+	% PRS.3SG p 234 (37), p 261 (76) vuâlgg BUG: I get vuâlǧǧ
+	% PRS.1PL p 251 (67), p 262 (77), p 268 (90) vue'lǧǧep
+	% PRS.2PL p 40, p 320 (196) vue'lǧǧve'ted
+	% PRS.3PL p 263 (78b), p 285 (121) vue'lǧǧe BUG: I get vuä'lǧǧe
+	% PRS.4 p 386 (3.4) vue'ljet
+	% PST.1SG p 49 vuõ'lǧǧem BUG: I get vui'lǧǧem
+	% PST.2SG p 321 (201) p 328 (212d) vuõ'lǧǧiǩ BUG: I get vui'lǧǧiǩ
+	% PST.3SG p 226 p 337 (225) vuõ'lji BUG: I get vui'lji
+	% PST.3PL p 349 (244) p 378 (2.13) vuõ'lǧǧe BUG: I get vui'lǧǧe
+	% PST.4 p 386 (3.3) vuõ'lǧǧeš BUG: I get vui'lǧǧeš
+	% IMP.2SG p 307 (156) vue'lj
+	% IMP.1PL p 329 (214) vue'lǧǧep
+	{basic} = v uä ' l ǧǧ
+	{weak} = v uä ' lj
+	{strong} = v uä ' l ǧǧ
+	<> = VERB:<class1 groupC>
+	.
+
+Think:
+	% Table 33 p 128 verified
+	% IMP.2SG juu'rd p 43 p 85 verified
+	% PRS.3SG jordd verified
+	{basic} = j u ' r dd
+	{weak} = j uu ' r d
+	{strong} = j u ' r dd
+	<> = VERB:<class1 groupC>
+	.
+
+% class 2: mainst-ed (tell), västtl-ed (slap), näärv-ed (wait)
+
+Tell:
+	% INF mainsted p. 118, class 2 group C
+	% PRS.3SG maainast p 120 verified
+	% PST.3SG mainsti p 227 (25d) p 336 (224c) verified
+	% COND.3SG mainste'či p 122 verified
+	% IMP.3SG mainstââǥǥas p mainstââǥǥas (215a) verified
+	% PST.PTCP mainstam p 264 (81b) p 284 (120b) verified
+	{basic} = m a i n s t
+	<> = VERB:<class2 groupC>
+	.
+
+Slap:
+	% INF västtled p 118 Table 22 class 2 group C verified
+	% PRS.3SG västtal p 49 verified
+	{basic} = v ä s tt l
+	<> = VERB:<class2 groupC>
+	.
+
+Wait:
+	% INF näärved p 118 Table 22 class 2 group C verified
+	% no other forms to verify
+	{basic} = n ää r v
+	<> = VERB:<class2 groupC>
+	.
+
+% class 3: rätkkj-ed (separate), võ'll'j-ed (jump), sedggj-ed (be dimly seen)
+
+Separate:
+	% INF rätkkjed p 118 Table 22 class 3 group C verified
+	% no other forms to verify
+	{basic} = r ä t k k j
+	<> = VERB:<class3 groupC>
+	.
+
+JumpUp:
+	% INF võ'll'jed p 118 Table 22 class 3 group C verified
+	% IMP.2SG võ'll’je p 119 verified
+	% PST.3SG võ'll’ji p 209 (1c) p 314 (182b) verified
+	% PART.PROG võ'll’je'mmen verified
+	{basic} = v õ ' ll ’j
+	<> = VERB:<class3 groupC>
+	.
+
+DimSeen:
+	% INF sedggjed p 118 Table 22 class 3 group C verified
+	% no other forms to verify
+	{basic} = s e d g g j
+	<> = VERB:<class3 groupC>
+	.
+
+% class 4: silte-ed (be able), kârre-ed (curse), ää've-ed (open)
+
+BeAble:
+	% INF silteed p 118 Table 22 class 4 group C verified
+	% PRES.1SG siltääm p 282 (115b) p 449 (17.15) verified
+	% PST.1SG silteem p 444 (15.7) verified
+	% PST.3SG siltii p 233 (35c) verified
+	% PST.3PL silttee p 423 (9.13) verified
+	% PART.PST siltääm p 444 (15.4) verified
+	{basic} = s i l t e
+	<> = VERB:<class4 groupC>
+	.
+
+Curse:
+	% INF kârreed p 118 Table 22 class 4 group C verified
+	% no other forms to verify
+	{basic} = k â r r e
+	<> = VERB:<class4 groupC>
+	.
+
+Open:
+	% p 122 Table 25 finite forms.  Discrepancy COND.1PL ending im/ep
+		% OK dialectal variation
+	% INF ää'veed p 118 Table 22 class 4 group C verified
+	% PST.3SG ää'vii p 215 (9b) verified
+	% PART.PAST ää'vääm p 220 (14c) p 276 (105) verified
+	{basic} = ää ' v e
+	<> = VERB:<class4 groupC>
+	.
+
+/* lexicon } */
+
+#vars $vowel: a aa å åå ä ää â ââ e ee i ii o oo õ õõ u uu .
+% #vars $diphthongs: iõ iõ'iâ ie' eâ eä' eä uõ uõ' uå ue' uä uä' .
+#vars $consonant: p b t tt đ đđ d dd ǩ g gg ǧ ǧǧ k ǥ m n nj ŋ ŋŋ r rr f v đ s z š ž j h ǥ c ʒ č ǯ l ll lj ’j .
+#vars $special: s š l r . % special for epenthesis
+#vars $diacritic: ' ∅ .
+
+/* { sandhi rules */
+
+% palatalization
+#sandhi iâ $consonant* ⇁ => ie ' $1 .
+#sandhi eâ $consonant* ⇁ => iä ' $1 .
+#sandhi uå $consonant* ⇁ => ue ' $1 .
+#sandhi uâ $consonant* ⇁ => ue ' $1 .
+#sandhi $vowel $consonant* ⇁ => $1 ' $2 .
+
+% unpalatalization
+#sandhi ' $consonant* N => ' $1 N ↓ . % removing palatalization lowers height
+#sandhi ' lj N => l ǥ . % change in consonant quality 
+#sandhi ie ' $consonant* N => iâ $1 . % one of many changes
+#sandhi iä ' $consonant* N => eâ  $1 . % one of many changes
+#sandhi ue ' $consonant* N => uõ $1 . % one of many changes
+#sandhi ' $consonant* N => $1 .
+#sandhi N => .
+
+% height
+#sandhi ↓ ↓ => ↓ . % one is enough; N may have introduced another
+#sandhi uu $diacritic*$consonant* ↓  => OO $1 $2 .
+#sandhi u $diacritic*$consonant* ↓  => O $1 $2 .
+#sandhi oo $diacritic*$consonant* ↓  => åå $1 $2 .
+#sandhi o $diacritic*$consonant* ↓  => å $1 $2 .
+#sandhi aa $diacritic*$consonant* ↓  => ää $1 $2 .
+#sandhi a $diacritic*$consonant* ↓  => ä $1 $2 .
+#sandhi ii $diacritic*$consonant* ↓  => ee $1 $2 .
+#sandhi i $diacritic*$consonant* ↓  => e $1 $2 .
+#sandhi ee $diacritic*$consonant* ↓  => ää $1 $2 .
+#sandhi e $diacritic*$consonant* ↓  => ä $1 $2 .
+#sandhi õõ $diacritic*$consonant* ↓  => ââ $1 $2 .
+#sandhi õ $diacritic*$consonant* ↓  => â $1 $2 .
+#sandhi iõ $diacritic*$consonant* ↓  => eâ $1 $2 .
+#sandhi iâ $diacritic*$consonant* ↓  => eä $1 $2 .
+#sandhi uõ $diacritic*$consonant* ↓  => uâ $1 $2 .
+#sandhi uå $diacritic*$consonant* ↓  => uä $1 $2 .
+#sandhi ↓  => .
+#sandhi OO $diacritic*$consonant* ↑  => uu $1 $2 .
+#sandhi O $diacritic*$consonant* ↑  => u $1 $2 .
+#sandhi åå $diacritic*$consonant* ↑  => oo $1 $2 .
+#sandhi å $diacritic*$consonant* ↑  => o $1 $2 .
+#sandhi ää $diacritic*$consonant* ↑  => a a $1 $2 .
+#sandhi ä $diacritic*$consonant* ↑  => a $1 $2 .
+#sandhi ee $diacritic*$consonant* ↑  => i i $1 $2 .
+#sandhi e $diacritic*$consonant* ↑  => i $1 $2 .
+#sandhi ää $diacritic*$consonant* ↑  => ee $1 $2 .
+#sandhi ä $diacritic*$consonant* ↑  => e $1 $2 .
+#sandhi â â $diacritic*$consonant* ↑  => õ õ $1 $2 .
+#sandhi â $diacritic*$consonant* ↑  => õ $1 $2 .
+#sandhi eâ $diacritic*$consonant* ↑  => iõ $1 $2 .
+#sandhi eä $diacritic*$consonant* ↑  => iâ $1 $2 .
+#sandhi uâ $diacritic*$consonant* ↑  => uõ $1 $2 .
+#sandhi uä $diacritic*$consonant* ↑  => uå $1 $2 .
+#sandhi ↑  => .
+#sandhi O  => o . 
+#sandhi OO  => oo . 
+
+% boundary sandhi
+#sandhi e B a => ää . % p. 122
+#sandhi e B i => i i . % p. 122
+#sandhi e B â => â . % for Table 25 p. 122, imperatives
+#sandhi B => .
+
+% epenthesis
+#sandhi $consonant $special $consonant E $vowel => $1 $4 $2 $3 . % p 131
+	% maainstEa => maainast; veä'lštEa => veä'lašt
+#sandhi $consonant $consonant $consonant E $vowel => $1 $2 $4 $3 . % p 120
+	% vaaldšEa => vaaldaš
+#sandhi $special $consonant E $vowel => $1 $2 . % permitted consonant centre: njorgg
+#sandhi $consonant $consonant E $vowel => $1 $3 $2 . % p 131
+	% can this occur? 
+#sandhi $vowel E $vowel => $2 d .
+	% class 4: silteEe => silted
+#sandhi E $vowel => .
+
+% j rules
+#sandhi ' $consonant* U => ' $1 e . % võ'll’je (jump, imp.2sg)
+#sandhi U => u . % čouddu (come loose, imp.2sg)
+/* end of sandhi rules } */
+
+#vars $tense: present past potential conditional imperative .
+#vars $person: 1 2 3 4 .
+#vars $number: sg pl .
+#vars $participle: action present past passive progressive temporal instrumental abessive .
+
+#show <infinitive> .
+#show <$tense :: $person :: $number> .
+#show <participle form $participle> .

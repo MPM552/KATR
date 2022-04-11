@@ -1,0 +1,91 @@
+% Luo: Nilo-Saharan, Nilotic
+% Informant: Dr. Pamela Oloo <aoloo2001@yahoo.com>, Dr. Onyango
+% Raphael Finkel 8/2011
+% /homes/raphael/links/pp/languages/luo.true
+% vim:filetype=KATR tw=10000 delcombine nospell:
+
+#vars $mood: indicative conditional .
+#vars $polarity: positive negative .
+#vars $subjPerson: 1subj 2subj 3subj .
+#vars $subjNumber: sgSubj plSubj.
+#vars $objPerson: 1obj 2obj 3obj .
+#vars $objNumber: sgObj .
+#vars $objNumber: plObj .
+#vars $tense: present future recentPast longPast .
+
+% lexemes
+See:
+	<stem> = nɛn 
+	{} = VERB
+	.
+
+Greet:
+	<stem> = mos
+	{} = VERB
+	.
+
+Teach:
+	<stem> = pwonj
+	{} = VERB
+	.
+
+% Verb rule
+
+VERB:
+	<> = COND NEG TENSE1 SUBJ TENSE2 "<stem>" REFL OBJ 
+	.
+
+COND:
+	{conditional} = ka
+	{} =
+	.
+
+NEG:
+	{negative} = ok
+	{} = 
+	.
+
+TENSE1:
+	{} = 
+	{recentPast} = n ê
+	{longPast} = n ě
+	.
+
+SUBJ:
+	{1subj sgSubj} = a
+	{1subj plSubj} = wa
+	{2subj sgSubj} = i
+	{2subj plSubj} = u
+	{3subj sgSubj} = o
+	{3subj plSubj} = gi
+	.
+
+TENSE2:
+	{} = 
+	{future} = bo
+	{longPast} =  ̌
+	.
+
+REFL:
+	{} =
+	{1subj sgSubj 1obj sgObj} = or
+	{2subj sgSubj 2obj sgObj} = or
+	.
+
+OBJ:
+	{1obj sgObj} = a
+	{2obj sgObj} = i
+	{3obj sgObj} = ɛ
+	{1obj plObj} = owa
+	{2obj plObj} = ou
+	{3obj plObj} = ogi
+	.
+
+#vars $vowel: a i ɛ o .
+#sandhi ě u => ǐ .
+#sandhi ê u => î .
+#sandhi ě $vowel => $1 .
+#sandhi ê $vowel => $1 .
+
+#show <indicative :: $polarity :: $tense :: $subjPerson :: $subjNumber :: $objPerson :: $objNumber> .
+

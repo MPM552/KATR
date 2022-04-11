@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+	<title>Latin Word Morphology</title>
+	<link href="generalstyle.css" rel="stylesheet" type="text/css" />
+	<link rel='icon' href='kentucky_wildcats.ico'/>
+	<script type='text/javascript'>
+
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-38138916-1']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
+
+	</script>
+</head>
+
+<body>
+<center><h1>Latin word morphology generator</h1></center>
+<h2>Verb</h2>
+<form
+	action="latinMorphology.cgi"
+	accept-charset="UTF-8"
+	method="post" >
+	<input type="hidden" name="pos" value="verb"/>
+	Root
+		<input type="text" size="5" name="root" value="dūc"/>
+		(You can copy and paste these letters: ā ē ī ō ū.)
+	<br />
+	Conjugation
+		<input type="radio" name="conj" value="Verba"
+			checked="checked"/> Conj1 (laud-āre) |
+		<input type="radio" name="conj" value="VerbEE"/> Conj2 (mon-ēre) |
+		<input type="radio" name="conj" value="VerbE"/> Conj3 (dūc-ere) |
+		<input type="radio" name="conj" value="VerbIO"/> Conj3-i (cap-ere) |
+		<input type="radio" name="conj" value="VerbI"/> Conj4 (aud-īre) 
+	<br />
+	Output these forms (check all that you want)
+		<br /> Voice
+		<input type="checkbox" name="voice" value="active" checked="checked" />
+			active |
+		<input type="checkbox" name="voice" value="passive" /> passive 
+		<br /> Mood
+		<input type="checkbox" name="mood" value="indicative" checked="checked"
+			/> indicative |
+		<input type="checkbox" name="mood" value="subjunctive" /> subjunctive 
+		<br /> Aspect
+		<input type="checkbox" name="aspect" value="imperfective"
+			checked="checked" /> imperfective |
+		<input type="checkbox" name="aspect" value="perfective" /> perfective 
+		<br /> Tense
+		<input type="checkbox" name="tense" value="present"
+			checked="checked" /> present |
+		<input type="checkbox" name="tense" value="past" /> past |
+		<input type="checkbox" name="tense" value="future" /> future 
+		<br /> Number
+		<input type="checkbox" name="number" value="sg"
+			checked="checked" /> singular |
+		<input type="checkbox" name="number" value="pl"
+			checked="checked" /> plural
+		<br /> Person
+		<input type="checkbox" name="person" value="1"
+			checked="checked" /> first |
+		<input type="checkbox" name="person" value="2"
+			checked="checked" /> second |
+		<input type="checkbox" name="person" value="3"
+			checked="checked" /> third
+	<input type="submit" value="submit"/>
+</form>
+
+<h2>Noun</h2>
+<form
+	action="http://www.cs.uky.edu/~raphael/linguistics/latinMorphology.cgi"
+	method="post" >
+	<input type="hidden" name="pos" value="noun"/>
+	Root <input type="text" size="5" name="root" value="urb"/>
+		(You can copy and paste these letters: ā ē ī ō ū.)
+	<br/>
+	Declension
+		<input type="radio" name="decl" value="decl1"/> 1 (naut-a) |
+		<input type="radio" name="decl" value="decl2"/> 2 (arm-um) |
+		<input type="radio" name="decl" value="decl3"/> 3 (reg-s) |
+		<input type="radio" name="decl" value="decl3i" checked="checked"/> 3i (urb-s) |
+		<input type="radio" name="decl" value="decl4"/> 4 (corn-ūs) |
+		<input type="radio" name="decl" value="decl5"/> 5 (di-ēs) |
+		<input type="radio" name="decl" value="decl5c"/> 5c (r-ēs) |
+	<br/>
+	Gender
+		<input type="radio" name="gender" value="masculine"
+			checked="checked"/> masculine |
+		<input type="radio" name="gender" value="feminine"/> 
+			feminine |
+		<input type="radio" name="gender" value="neuter"/> 
+			neuter 
+	<br/>
+	Case
+		<input type="checkbox" name="case" value="nominative"
+			checked="checked"/> nominative |
+		<input type="checkbox" name="case" value="genitive" checked="checked"/> 
+			genitive |
+		<input type="checkbox" name="case" value="dative" checked="checked"/> 
+			dative |
+		<input type="checkbox" name="case" value="accusative"
+			checked="checked"/> accusative |
+		<input type="checkbox" name="case" value="ablative" checked="checked"/> 
+			ablative |
+		<input type="checkbox" name="case" value="vocative" checked="checked"/> 
+			vocative 
+	<br />
+	Number
+		<input type="checkbox" name="number" value="sg"
+			checked="checked" /> singular |
+		<input type="checkbox" name="number" value="pl"
+			checked="checked" /> plural
+	<input type="submit" value="submit"/>
+</form>
+
+<h2>Adjective</h2>
+<form
+	action="http://www.cs.uky.edu/~raphael/linguistics/latinMorphology.cgi"
+	method="post" >
+	<input type="hidden" name="pos" value="adjective"/>
+	Root <input type="text" size="5" name="root" value="bōn"/>
+		(You can copy and paste these letters: ā ē ī ō ū.)
+	<br/>
+	Ending
+	<input type="radio" name="category" value="Adjective" checked="checked"/>
+		ordinary (bōn-us) |
+	<input type="radio" name="category" value="AdjectiveER"/> -r (pulchr-a)
+	<br/>
+	Gender
+		<input type="checkbox" name="genders" value="masculine" checked="checked"/> 
+			masculine |
+		<input type="checkbox" name="genders" value="feminine"/> 
+			feminine |
+		<input type="checkbox" name="genders" value="neuter"/> 
+			neuter 
+	<br/>
+	Case
+		<input type="checkbox" name="case" value="nominative" checked="checked"/> 
+			nominative |
+		<input type="checkbox" name="case" value="genitive" checked="checked"/> 
+			genitive |
+		<input type="checkbox" name="case" value="dative" checked="checked"/> 
+			dative |
+		<input type="checkbox" name="case" value="accusative" checked="checked"/> 
+			accusative |
+		<input type="checkbox" name="case" value="ablative" checked="checked"/> 
+			ablative |
+		<input type="checkbox" name="case" value="vocative" checked="checked"/> 
+			vocative 
+	<br />
+	Number
+		<input type="checkbox" name="number" value="sg"
+			checked="checked" /> singular |
+		<input type="checkbox" name="number" value="pl"
+			checked="checked" /> plural
+	<input type="submit" value="submit"/>
+</form>
+
+</body>
+</html>

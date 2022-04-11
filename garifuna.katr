@@ -1,0 +1,115 @@
+% Garifuna
+
+/* vim:filetype=KATR tw=10000 delcombine nospell:
+Authors:
+	Raphael Finkel <raphael@cs.uky.edu>
+Date: started 5/2012
+
+Copyright © Raphael Finkel 2012
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Verbs in class "short" do not use an enclitic in 3 sg !present middle.
+
+*/
+
+#vars $tense: aorist perfect continuative future progressive .
+#vars $number: sg pl .
+#vars $person: 1 2 3 .
+#vars $gender: masc fem .
+#vars $polarity: positive negative.
+#vars $itivity: intransitive transitive .
+
+
+% { vocabulary
+
+Run:  
+	<stem> = eibagua
+	{transitive} = !
+	<> = Verb
+	.
+
+Eat:  
+	<stem> = hou
+	<stem negative> = eigi
+	<> = Verb
+	.
+
+See:  
+	<stem> = ariha
+	<> = Verb
+	.
+
+%  vocabulary } 
+
+Verb:
+	{aorist intransitive} = Negator "<stem>" - t TPerson
+	{aorist transitive} = Negator "<stem>" , GPerson - umu - ti % TPerson obj
+	{perfect intransitive} = Negator "<stem>" - ha - DPerson
+	{perfect transitive} = Negator "<stem>" , GPerson - a - li % DPerson obj
+	{continuative intransitive} = Negator "<stem>" - gi - DPerson
+	{continuative transitive} = Negator "<stem>" , GPerson - agi - li % DPerson obj
+	{future intransitive} = GPerson - "<stem>" , ba
+	{future intransitive negative} = m - "<stem negative>" ,  ba - DPerson
+	{future transitive} = GPerson - "<stem>" , ba - i % short DPerson obj
+	{future transitive negative} = m - "<stem negative>" , GPerson u - ba - i % short DPerson obj
+	{progressive intransitive} = GPerson - "<stem>" , ña
+	{progressive transitive} = GPerson - "<stem>" , ña - i % short DPerson obj
+	{progressive intransitive negative} = mama - GPerson - "<stem negative>" , ña - i % short DPerson obj
+	{progressive transitive negative} = mama - GPerson - "<stem negative>" , ña - i % short DPerson obj
+	{pl fem ++} = ! % no need for these forms
+	{1 fem ++} = ! % no need for these forms
+	{2 fem ++} = ! % no need for these forms
+	.
+
+Negator:
+	{negative} = m -
+	{} = 
+	.
+
+TPerson:
+	{1 sg} = ina
+	{2 sg} = ibu
+	{3 sg masc} = i
+	{3 sg fem} = u
+	{1 pl} = iwa
+	{2 pl} = ü
+	{3 pl} = iña
+	.
+
+GPerson: % genitive
+	{1 sg} = n
+	{2 sg} = b
+	{3 sg masc} = l
+	{3 sg fem} = t
+	{1 pl} = wa
+	{2 pl} = h
+	{3 pl} = ha
+	.
+
+DPerson: % used in perfect
+	{1 sg} = dina
+	{2 sg} = dibu
+	{3 sg masc} = li
+	{3 sg fem} = ru
+	{1 pl} = diwa
+	{2 pl} = dü
+	{3 pl} = ña
+	.
+
+#show <$tense :: $polarity :: $itivity :: $number :: $person :: $gender> .
+
+#sandhi a - u => a - . % wa-umu => wa-mu
+#sandhi a u => a . % ha u => ha
+#sandhi a - a => - a . % wa-a => w-a

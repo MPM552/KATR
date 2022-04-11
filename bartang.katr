@@ -1,0 +1,257 @@
+/* vim:filetype=KATR keymap=shughni tw=10001 delcombine nospell:
+In KATR
+Bartang morphology.
+Pamiri, East Persian
+Authors:
+	Raphael Finkel <raphael@cs.uky.edu>
+Date: started 5/2012
+
+Copyright © Raphael Finkel 2012 raphael@cs.uky.edu  
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
+/* notes 
+
+the -o suffix tends to be interrogative.  It is quite rare in 1st
+person, but acceptable.
+
+the "pay" means "begin to"; its incipient meaning can form a future from
+a past.
+
+the 'um' ending in present and future2 is movable; it fits on the verb
+or on pay.
+
+*/
+
+#hideInternal
+#vars $tense: present past perfect future future2 . 
+	% future2 is a free variant of future
+	#vars $nonPast: present future .
+	#vars $somePast: past perfect .
+#vars $gender: masc fem .
+#vars $number: sg pl .
+#vars $person: 1 2 3 .
+#vars $sign: positive negative .
+
+#vars $letter: a e k t c ā ê l θ č b ž m u š w z n ū ɣ v ʒ o ů ɣ̌ g i p f q d ī r x ǰ ð y s x̌ h  .
+	#vars $vowel: a e ā ê u ū o i ī .
+	#vars $voiced: b ž z ɣ ɣ̌ v ʒ g d ǰ ð y a e ā ê u ū ů o i ī .
+		% (obstruents and vowels) used in sandhi
+
+/* pronuciation key (into IPA), omitting obvious letters
+(k, t, l, b, m, z, p, f, d, s, h, w, n, v, g)
+
+a [ɑ]
+e [ɪ]
+c [ʦ]
+ā [aː]
+ê [ɛ]
+θ [θ]
+č [tʃ]
+ž [ʒ]
+u [ɔ]
+š [ʃ]
+ū [u]
+ɣ [ʁ]
+ɣ̌ [ɣ]
+ʒ [ʣ]
+o [o]
+ů [ʉ]
+i [ə] (unstressed) [ɨ] (stressed)
+q [q]
+ī [i]
+r [ɹ] (at least sometimes)
+x [χ]
+x̌ [x]
+ǰ [ʤ]
+ð [ð]
+y [j]
+
+*/
+
+
+/* { vocabulary  
+
+See:
+	<stemPresent> = w u n 
+	<directObject> = [wam,x̌itur] ,
+	<stemInfinitive> = w ī n
+	<> = Verb:<transitive>
+	.
+
+Knit:
+	{stemPresent} = w ā f
+	{stemPast 1 sg} = w u f
+	{stemPerfect} = w ey f
+	<directObject> = [wam,jerab] ,
+	<> = Verb:<transitive emptyImpSuffix>
+	.
+
+Cook:
+	{stemPresent} = p e y ʒ
+	{stemPast} = pux
+	{stemFuture} = peyx
+	<directObject> = [wam,xervow] , % soup
+	<> = Verb:<transitive>
+	.	
+
+Read:
+	{stemPresent} = x̌ o y
+	{stemPast} = x̌ e y d
+	<directObject> = [wam,kitob] , % book
+	<> = Verb:<transitive>
+	.	
+
+SitDown:
+	{stemPresent} = n i θ 
+	{stemPast fem} = n a s 
+	{stemPast masc} = n u s 
+	{stemPerfect 1 masc} = n ey š 
+	{stemPerfect 2 pl masc} = n ey š 
+	{stemPerfect !1 masc} = n a š
+	{stemPerfect fem} = n a š
+	{stemPresent} = n u š
+	{stemPast} = n a š
+	<> = Verb:<intransitive>
+	.	
+
+/* vocabulary } */
+
+Verb: 
+	{!intransitive middle ++} = !
+	{imperative} == "<directObject>" Negator "<stemImperative>" ImperativeSuffix
+	{present} = Pronoun , "<directObject>" "<stemPresent>" PresentSuffix Interrog
+	{present intransitive} = Pronoun , "<stemPresent>" PresentSuffix Interrog
+	{future} = Pronoun , t ê , "<directObject>" "<stemPresent>" FutureSuffix Interrog
+	{future intransitive} = Pronoun , t ê , "<stemFuture>" FutureSuffix Interrog
+	{future2} = Pronoun , t ê , "<directObject>" pay , "<stemPerfect>" Future2Suffix Interrog
+	{future2 intransitive} = Pronoun , t ê , pay , "<stemPerfect>" Future2Suffix Interrog
+	{past} = Pronoun Enclitic , "<directObject>" "<stemPast>" PastSuffix Interrog
+	{past intransitive} = Pronoun Enclitic , "<stemPast>" PastSuffix:<intransitive> Interrog
+	{perfect} = Pronoun Enclitic , "<directObject>" "<stemPerfect>" PerfectSuffix Interrog
+	{perfect intransitive} = Pronoun Enclitic , "<stemPerfect>" PerfectSuffix:<intransitive> Interrog
+	{infinitive} = "<stemInfinitive>" t o w 
+	{stemPast} == "<stemPresent>"
+	{stemPerfect} == "<stemPast>"
+	{stemInfinitive} == "<stemPast>"
+	{stemImperative} == "<stemPresent>"
+	{stemFuture} == "<stemPresent>"
+	.
+
+Interrog:
+	{} = (o) % optional, adds an interrogative feel
+	{1} =
+	.
+
+GeneralSuffix:
+	{1 sg} == u m 
+	{2 sg} == ê 
+	{3 sg} == t
+	{1 pl} == (ām/ān) % ām is more Roshani
+	{2 pl} == a f
+	{3 pl} == a n
+	.
+
+PresentSuffix:
+	{2 pl} == a f
+	{3 sg} == t
+	{} = GeneralSuffix
+	.
+
+PastSuffix:
+	{} = t
+	{2 sg transitive} = (i/tat)
+	{2 pl transitive} = (t) af
+	.
+
+FutureSuffix:
+	{3 sg} == t
+	{2 sg} = (ê/at) % at is a southern Bartang dialect 
+	{2 pl} == af
+	{3 pl transitive} == (af/an)
+	{} = GeneralSuffix
+	.
+
+Future2Suffix:
+	{} = t GeneralSuffix % adding the GeneralSuffix makes it "perhaps"; leave out for definite
+	{intransitive} = PerfectSuffix:<intransitive> 
+	.
+
+PerfectSuffix:
+	{} = č
+	{!1} = č
+	.
+
+Enclitic: 
+	{3 sg $nonPast} == t
+	{2 sg } == y a t
+	{3 sg } == y i o
+	{1 pl} == ā m
+	{2 pl} == a v
+	{3 pl} == a n
+	{} = GeneralSuffix
+	.
+
+Pronoun: 
+	{1 sg} == w a z
+	{2 sg} == t u
+	{3 sg} == y ā
+	{1 pl} == m ā š
+	{2 pl} == t a m ā š
+	{3 pl} == w ā ð e
+	{3 pl future} == w ā ð
+	{3 pl future2} == w ā ð
+	.
+
+Negator: % for imperatives; for indicatives, it's "na" before the verb.
+	{negative} = m ā ,
+	<> =
+	.
+
+ImperativeSuffix:
+	{pl} = (t) af % (t)um is also acceptable for some verbs, like wīntow, not all
+	{positive sg} = t % true for wīn, not for wāf
+	{emptyImpSuffix sg +} = % wāf
+	{} = 
+	.
+
+#show <infinitive> .
+#show <imperative :: $sign :: $number> .
+#show <$gender :: $tense :: $number :: $person> .
+
+#sandhi e a =>a .
+#sandhi t t => t .
+#sandhi d t => t .
+#sandhi $voiced č => $1 ǰ .
+% #sandhi $voiced - c => $1 - ʒ .
+% #sandhi t - t => t . % yat-t => yat
+% #sandhi c - č => c . % pic-č => pic
+% #sandhi d - d => d - .
+% #sandhi d - t => d - .
+% #sandhi v - u => - .
+
+#alternative t u y a t => t u  t . % tu-yat => tu-t
+% #alternative i - y u m => ī - m. % pi-yum => pīm
+% #alternative $letter* a - w u m => $1 ā - m. % sa-wum => sām
+% #alternative $letter ā r$ => $1 a . % vār => va (Gulnoro)
+% #alternative $letter ā r - e t => $1 e t . % vār-et => vet
+% #vars $weakConsonant: w r y .
+% #vars $strongVowel: ā a i .
+% note: we may need to separate the following rules to force saw-um => sām
+% #alternative $letter* $strongVowel $weakConsonant - u $letter => $1 $2 $4 . % sāw-um => sām
+% #alternative $letter* $strongVowel $weakConsonant - e $letter => $1 e $4 . % sāw-et => set
+% #alternative $letter* $strongVowel - y e $letter => $1 - e $3 . % rimi-yet => rim-et
+

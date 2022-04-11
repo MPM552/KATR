@@ -1,0 +1,253 @@
+% Nepali conjugations
+% Analysis as in Bonami & Boye 2006
+% Author: Olivier Bonami
+% Modified for KATR: Raphael Finkel 5/2011
+
+% Differences:
+% Added a prefixal block -1. This way blocks can be treated as position classes and everything is a lot more readable.
+% The treatment of conjugation classes as features is not implemented (yet). Thus there is no way of predicting the fact that verbs in the vc class have no short negative forms.
+%The -thi form imperfective is not implemented yet: not easy to have overlapping portmanteau blocks (this was a problem in the PFM analysis too anyway).
+% The treatment of (abstract) phonology is conceptually unsatisfactoy---however it works.
+
+% Corrections to the BoBo Handout
+% 1. A FCR is missing: 
+%{TENSE fut, POL pos} =) {FORM short}
+%2. The same information is missing from the correspondence tables
+%Rule d in blck 8 and rule a in block 6 need not mention MOOD
+%3. MODE should be replaced by MOOD, Correspondance by Correspondence
+
+% KATR modifications (Raphael Finkel 5/2011)
+% Slight syntax modifications for KATR.
+% Replaced long <paths> with much shorter {sets}.
+% Replaced the PHON node with post-processing Sandhi.
+% Indicating nasalization by adding the mark ~.
+% Replaced Ascii workarounds with Unicode symbols.
+% Added forbidding rules for 1 α b and 1 β a.
+
+%Oral vowels
+#atom ε.
+
+%Nasal vowels
+#atom ã ũ ẽ .
+
+%Long vowels
+#atom ā.
+
+%Simple consonants
+#atom ʂ ʐ ʈ ɖ ɳ ɲ ŋ.
+
+%Affricates
+#atom ʦ ǳ.
+
+%Aspirated consonants
+#atom kʰ gʰ ʧʰ ǳʰ ʈʰ ɖʰ tʰ dʰ pʰ bʰ sʰ.
+
+%Phonological operations
+#atom ▷ ◁.
+
+%%%%%%%%%%%%%%%%%
+%Variables
+%%%%%%%%%%%%%%%%%
+
+% 1. Phoneme classes
+
+#vars $vow: i e a o u ε ā ã ũ ẽ.
+#vars $noncont: k kʰ g gʰ ŋ ʦ ʧʰ ǳ ǳʰ  ʈ ʈʰ ɖ ɖʰ t tʰ d dʰ p pʰ b bʰ.
+#vars $nascon: m n ɳ ɲ ŋ.
+#vars $con: k kʰ g gʰ ŋ ʦ ʧʰ ǳ ǳʰ ɲ ʈ ʈʰ ɖ ɖʰ ɳ t tʰ d dʰ n p pʰ b bʰ m j r l w sʰ ʂ s h.
+#vars $seg: $vow + $con. 
+#vars $abstract: ▷ ◁.
+
+% 2. Features
+
+#vars $mood: ind inj imp.
+#vars $tns: prs pst fut.
+#vars $asp: pfv ipfv.
+#vars $pol: pos neg.
+#vars $form: short long.
+#vars $per: 1 2 3.
+#vars $col: a b.
+#vars $row: α β.
+#vars $class: cc cv vc vv.
+
+% #uses UNDEF.
+
+VERB: 
+	% <> == PHON:<BLOCK_MINUS_1 "<stem>" BLOCK_1:<"<class>"> BLOCK_2 BLOCK_3 BLOCK_4 BLOCK_5 BLOCK_6 BLOCKS_7_10>
+	<> == BLOCK_MINUS_1 "<stem>" BLOCK_1:<"<class>"> BLOCK_2 BLOCK_3 BLOCK_4 BLOCK_5 BLOCK_6 BLOCKS_7_10
+	{neg/pos long fut} =+= n a <>
+	{1 α b} = ! % some forms don't exist in first person
+	{1 β a} = !
+	.
+	
+
+/*
+%NB: a ameliorer. Il y a une interaction moche entre le traitement des solubles et les regles phono. Il faudrait trouver un moyen de faire ca cycliquement.	
+PHON: 
+	<> ==
+    <$seg> == $seg <>
+	<i a> == j a <>
+    <$abstract> == <>
+    <$vow ▷ $vow2> ==  <$vow2>
+    <$con ◁ $con2> == $con <>
+	<o $nascon> == u $nascon <>
+	<$vow ◁ $nascon $noncont> == NASALIZE:<$vow> $noncont <>
+	.
+
+NASALIZE:
+	<> ==
+	<a> == ã
+	<e> == ẽ
+	<u> == ũ
+	.
+
+*/
+
+BLOCK_MINUS_1:
+	<> ==
+	<inj neg> == n a
+	<imp neg> == n a
+	.
+
+	
+BLOCK_1:
+	<> == 
+	{cc ipfv} == a
+	{vv ipfv} == u
+	{fut} == u
+	{cc fut} == e ▷
+	{cv fut} == e ▷
+	.
+	
+BLOCK_2:
+	<> ==
+	{ipfv} == ◁ n
+	.
+	
+BLOCK_3:
+	<> ==
+	{long ipfv} == d
+	.
+	
+BLOCK_4:
+	<> ==
+	{neg a long} == i
+	{neg b long ipfv} == a j
+	{neg b pst pfv} == e
+	{neg 2 α b pst pfv} == i
+	{pos long ipfv} == a
+	{neg short fut} == o j
+	.
+
+BLOCK_5:
+	<> ==
+	{ind neg}	== n a ▷
+	.
+
+BLOCK_6:
+	<> ==
+	{pos prs} == ʧʰ a ▷
+	{$pol pst ipfv} == tʰ
+	.
+
+BLOCKS_7_10:
+	<> == BLOCK_7 BLOCKS_8_10
+	{1 α pst ipfv} == ẽ
+	{3 α b pst ipfv} == j o
+	{3 β b pst ipfv} == e
+	{pos pst pfv} == BLOCKS_7_10:<pos pst ipfv>
+	.
+
+BLOCK_7:
+	<> ==
+	{pst ipfv} == i
+	{pos β a prs} == i
+	.
+
+BLOCKS_8_10:
+	<> == BLOCK_8 BLOCK_9 BLOCK_10
+	{ind neg 1 α short} ==
+	{imp 2 β} == CHOOSE_IMP_2_β:<"<class>">
+	{imp 2 α} == CHOOSE_IMP_2_α:<"<class>">
+	.
+	
+CHOOSE_IMP_2_β:
+	<> == a
+	<cv> == u
+	<vv> == u
+	.
+	
+CHOOSE_IMP_2_α:
+	<> ==
+	<cc> == i i
+	.
+
+	
+BLOCK_8:
+	<> ==
+	{pos α a prs} == ε
+	{pos 1 α a prs} == u
+	{1 α fut} == ũ
+	{1 β b} == a ũ
+	{ind 1 α} == ã
+	{ind 2 β} == a u
+	{inj 1 α} == ũ
+	{inj 2} == e
+	{inj 3} == o
+	.
+
+BLOCK_9:
+	<> ==
+	{pos a fut} == l i
+	{pos b fut} == l ā
+	{pos 1 α a/b fut} =+= <>
+	.
+
+BLOCK_10:
+	<> ==
+	{2 α} == s
+	{3 β} == n
+	{inj 3 α} == s
+	.
+	
+
+Forget:
+	<> == VERB
+	<class> == cc
+	<stem> == b i r s
+	.
+
+#hide VERB BLOCK_MINUS_1 BLOCK_1 BLOCK_2 BLOCK_3 BLOCK_4 BLOCK_5 BLOCK_6 BLOCKS_7_10 BLOCK_7 BLOCKS_8_10 BLOCK_8 BLOCK_9 BLOCK_10 PHON CHOOSE_IMP_2_β CHOOSE_IMP_2_α NASALIZE .
+
+
+%%%%%%%%%%%%%%%%%
+%The feature sequence
+%<$mood $pol $per $row $col $form $tns $asp>.
+%%%%%%%%%%%%%%%%%
+
+% #show
+%No perfective in the indicative present
+#show <ind short prs ipfv $pol $per $row $col> .
+#show <ind long prs ipfv $pol $per $row $col> .
+%No short forms in the indicative simple past
+#show <ind long pst pfv $pol $per $row $col> .
+%The indicative imperfective past has both long and short forms
+#show <ind short pst ipfv $pol $per $row $col> .
+#show <ind long pst ipfv $pol $per $row $col> .
+%No aspect distinction in the future. In addition no positive long forms
+#show <ind pos short fut $per $row $col > .
+#show <ind neg short fut $per $row $col> .
+#show <ind neg long fut $per $row $col> .
+%No tense, aspect or form alternation in the injunctive
+#show <inj $pol $per $row $col> .
+%The imperative has only 2nd person forms
+#show <imp pos 2 $row $col> .
+#show <imp neg 2 $row $col> .
+
+#sandhi $vow ▷ $vow  => $2 .
+#sandhi $con ◁ $con => $1 .
+#sandhi	$vow ◁ $nascon $noncont => $1  ̃ $3 .
+#sandhi $abstract => . % default
+#sandhi o $nascon => u $1 .
+#sandhi i a => j a  .
+

@@ -1,0 +1,1037 @@
+/*
+ vim:set filetype=KATR nospell tw=1000:
+Irish morphology.
+Authors:
+	Raphael Finkel <raphael@cs.uky.edu>
+Date: 9/2008 - 7/2009
+References:
+	http://www.irishdictionary.ie/dictionary
+	Réchúrsa Gramadaí (1953 or so)
+	http://en.wikipedia.org/wiki/Irish_verbs
+	http://en.wikipedia.org/wiki/Irish_initial_mutations
+	http://www.unilang.org/wiki/index.php/Irish_nouns
+	http://en.wikibooks.org/wiki/Irish/Nouns
+	Foclóir póca
+
+Copyright © Raphael Finkel 2009 raphael@cs.uky.edu  
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Short glossary
+
+	bhriathar: verbs
+		aimsir: tense
+			ghnáthláithreach: continuous present
+			láithreach: present
+			chaite: past ("I ate; I drank); has a preterite meaning.
+				not perfect ("I have just eaten")
+			ghnáthchaite: past habitual ("used to")
+			fháistineach: future
+			coinníollach: conditional (conditional past: "would have")
+			ordaitheach: imperative
+			foshuiteach: subjunctive (optative: may I, I hope that)
+		fhoirm: form
+			dhiúltach diúltach: negative
+			deartach: positive
+			cheisteach ceisteach: interrogative
+		réimniú: conjugation
+		modh: mood
+		táscach: declarative
+	ainmfhocail: nouns
+		tuisil: cases
+			ainmneach: nominative (also used for accusative)
+			gairmeach: vocative
+			ginideach: genitive
+			tabharthach: dative (especially in Munster dialect)
+		díoclaontaí: declensions
+		inscne: gender
+			firinscneach: masculine
+			baininscneach: feminine
+	chéad: first
+	den: of
+	an: the
+	uimhir: number
+	uatha: singular
+	iolra: plural
+	chonsan: consonant
+	leathan: [consonant category, includes g]
+	caol: [consonant category, includes th]
+	ghuta: vowel
+	saorbriathar: autonomous (impersonal, used for passives)
+	chríochnaíonn: end
+	thosaíonn: begin
+
+*/
+
+#atom O_ I_ I1 I4 I+ I2 I3 A_ A+ .
+#vars $consonant: b bh bhf bp c ch d dh f fh g gc gh h l m mh n ng p ph r s sh t th - . % include - because it is like a consonant at word end.
+#vars $jer: h_ n_ d_ l_ O_ t_ l1 I_ I+ I1 I3 u_ ; .
+	% d_: lenition (séimhiú): becomes d' before vowels and f;
+	%	aspirates consonants (t -> th, c -> ch)
+	% l_: limited lenition: not before vowels or (lenited) f
+	% l1: like l_, additionally places t- before s; for nouns
+	% l2: like l1, but does not lenite t or d
+	% O_: prevents lenition
+	% n_: eclipsis (urú): becomes n before vowels;
+	%	voices/nasalises consonants (t -> dt, c -> gc)
+	% h_: becomes h before vowels; disappears before consonants
+	% t_: places t- before following vowel; for nouns
+	% u_: a vowel that becomes u if a broad vowel is needed, else disappears
+	% I_: becomes an i if the following consonant is followed by I+; otherwise, both the I_ and I+ disappear.
+	% I+ also has the property that an í before it shortens.
+	% I3 removes <I+ f>; special for irregular verbs in future and conditional
+	% I1 is like I_, but it does *not* become an i if the I+ is followed by t.
+	% I4 is like I_, but it also becomes i if the following consonant is followed by I2.
+	% A_ is an epenthetic "a" (if followed by A+) or "vowel i" (if followed by I+) or nothing (otherwise).
+	% ; removes a preceding space (,)
+	
+% surface forms
+#vars $vowel: a á e é i í o ó u ú @ .
+	#vars $slenderVowel: e é i í @ .
+	#vars $broadVowel: a á  o ó u ú @ . 
+	% @ is either a or e, depending on what harmonizes with previous vowel
+
+% for verbs
+#vars $polarity: positive negative .
+#vars $mood: declarative interrogative .
+#vars $tense: immediate present past pastHabitual future conditional subjunctive imperative .
+	% there was a "habitual", but I have removed it.
+	% "immediate" only occurs for a few verbs such as 'tá'.  It is present non-continual.
+	#vars $historical: past conditional pastHabitual .
+#vars $number: sg pl .
+#vars $person: 1 2 3 .
+#vars $otherForms: verbalNoun verbalAdj .
+#vars $conjugation: conj1 conj2 .
+
+% for nouns
+#vars $case: nominative genitive .
+#vars $definiteness: indefinite definite .
+
+% for adjectives
+#vars $gender: masculine feminine .
+
+% noun vocabulary from dictionary {
+
+/* 
+
+Boat:
+	<stem> = b á I_ d
+	{} = NounM1
+	.
+
+LamePerson:
+	<stem> = b a c
+	{} = NounM1:<stemAch>
+	.
+
+Pen:
+	<stem> = p
+	{} = NounM1:<stemEann>
+	.
+
+Beast:
+	<stem> = b e i th í
+	{} = NounM1:<stemAch>
+	.
+
+Paper:
+	<stem> = p a i p é
+	{} = NounM1:<stemR>
+	.
+
+Bee:
+	<stem> = b e I_
+	{} = NounF2:<stemAch>
+	.
+
+Palm:
+	<stem> = b o I_ s
+	{} = NounF2
+	.
+
+Throat:
+	<stem> = s c o r
+	{} = NounF2:<stemNach>
+	.
+
+Church:
+	<stem> = e a g l a i s
+	{} = NounF2:<stemAis>
+	.
+
+Singer:
+	<stem> = c a i n t e o I_ r
+	{} = NounM3
+	.
+
+Firm:
+	<stem> = g n ó l a ch t
+	{} = NounM3
+	.
+
+Tinker:
+	<stem> = t i n c é I_
+	{} = NounM3:<stemR>
+	.
+
+Acknowledgement:
+	<stem> = a d mh á I_ l
+	{} = NounF3:<stemAil>
+	.
+
+Blessing:
+	<stem> = b e a n n a ch t
+	{} = NounF3
+	.
+
+Abbess:
+	<stem> = b e a n ‐ a b
+	{} = NounF3
+	.
+
+Stick:
+	<stem> = b a t a
+	{} = NounM4
+	.
+
+Gift:
+	<stem> = f é i r í n
+	{} = NounM4
+	.
+
+Cake:
+	<stem> = c í s t e
+	{} = NounM4
+	.
+
+Secretary:
+	<stem> = r ú n a í
+	{} = NounM4:<stemAi>
+	.
+
+Order:
+	<stem> = o r d
+	{} = NounM4:<stemU>
+	.
+
+Gathering:
+	<stem> = c r u i n n i
+	{} = NounM4:<stemU>
+	.
+
+Gap:
+	<stem> = b e a r n a
+	{} = NounF4
+	.
+
+Advice:
+	<stem> = c o mh a i r l e
+	{} = NounF4
+	.
+
+% noun vocabulary }
+/* */
+
+% verb vocabulary, lexicon {
+
+/* conj1 { 
+
+Take: 
+	{stem} = t ó g 
+	{verbalAdjectiveSuffix} = th a
+	{gerundSuffix} = á i l
+	<> = Verb:<conj1>
+	.
+
+Walk:
+	{stem} = s ú i l
+	<> = Verb:<conj1>
+	.
+
+% checked; very similar to Take
+Eat1:
+	{stem} = p l a c
+	{verbalAdjectiveSuffix} = th a
+	{gerundSuffix} = a dh
+	<> = Verb:<conj1>
+	.
+
+% checked; very similar to Take
+Steal:
+	{stem} = g o i d
+	{verbalAdjectiveSuffix} = t e
+	{gerundSuffix} = 
+	<> = Verb:<conj1>
+	.
+
+% checked, vaguely
+Think:
+	{stem} = c e a p
+	{verbalAdjectiveSuffix} = th a
+	<> = Verb:<conj1>
+	.
+
+Spend: 
+	{stem} = c a i th
+	{verbalAdjectiveSuffix} = t e
+	{gerundSuffix} = e a mh
+	<> = Verb:<conj1>
+	.
+
+Drink:
+	{stem} = ó l
+	{verbalAdjectiveSuffix} = t a
+	{gerundSuffix} = 
+	<> = Verb:<conj1>
+	.
+
+/* conj1 } 
+
+/* conj2 {
+
+PlaySport: % imir
+	{stem} = i m I_ r
+	{gerundSuffix} = I+ t
+	<> = Verb:<conj2>
+	.
+
+Sleep: % codail
+	{stem} = c o d A_ l
+	<> = Verb:<conj2>
+	.
+
+Buy: % ceannaigh
+	{stem} = c e a n n 
+	<> = Conj2igh
+	.
+
+Hit: % aimsigh
+	{stem} = a i m s
+	<> = Conj2igh
+	.
+
+/* conj2 } 
+
+% verb vocabulary, lexicon }
+
+% verb vocabulary, from dictionary {
+
+/* 
+Praise:
+	<stem> = m o l
+	{verbalAdjectiveSuffix} = t a
+	<> = Conj1
+	.
+
+Break:
+	<stem> = b r i s
+	<> = Conj1
+	.
+
+Save: % save; rescue; preserve; harvest
+	<stem> = s á bh á I_ l
+	{gerundSuffix} = I+
+	<> = Conj1
+	.
+
+Bestow: % bestow; dedicate; convey
+	<stem> = t i o l a I1 c
+	{verbalAdjectiveSuffix} = th a
+	<> = Conj1
+	.
+
+Agonize: % agonize, torment; distress, grieve, annoy
+	<stem> = c r á I_
+	<> = Conj1igh
+	.
+
+Burn:
+	<stem> = d ó I_
+	<> = Conj1igh
+	.
+
+Jump:
+	<stem> = l é I4
+	{gerundSuffix} = a mh
+	<> = Conj1igh
+	.
+
+Weave:
+	<stem> = f í
+	<> = Conj1igh
+	.
+
+Bless: % bless, greet
+	<stem> = b e a n n
+	{verbalAdjectiveSuffix} = i th e
+	{gerundSuffix} = ú
+	<> = Conj2igh
+	.
+
+Gather: % gather, assemble, collect, converge, focus
+	<stem> = c r u i n n
+	{verbalAdjectiveSuffix} = i th e
+	{gerundSuffix} = i ú
+	<> = Conj2igh
+	.
+
+Bind: % bind, tie
+	<stem> = c e a ng A_ l
+	{gerundSuffix} = A+
+	<> = Conj2
+	.
+
+Banish: % banish, expel, drive out
+	<stem> = d í b I_ r
+	{verbalAdj} = d í b e a r th a % special case
+	{gerundSuffix} = I+ t
+	<> = Conj2
+	.
+
+Catch:
+	<> = IrregCatch
+	.
+	
+Hear1:
+	<> = IrregHear1
+	.
+	
+Hear2:
+	<> = IrregHear2
+	.
+	
+Make:
+	<> = IrregMake
+	.
+	
+Say:
+	<> = IrregSay
+	.
+	
+Get:
+	<> = IrregGet
+	.
+	
+See:
+	<> = IrregSee
+	.
+	
+Come:
+	<> = IrregCome
+	.
+	
+Eat:
+	<> = IrregEat
+	.
+	
+Go:
+	<> = IrregGo
+	.
+	
+Give:
+	<> = IrregGive
+	.
+	
+Be:
+	<> = IrregBe
+	.
+	
+/* */
+
+% adjective vocabulary, from dictionary {
+
+/*
+
+White: % white, fair-headed
+	<stem> = b á I_ n
+	{} = Adj1
+	.
+
+Clever: % clever, shrewd, cunning
+	<stem> = g l i c
+	{} = Adj1
+	.
+
+Playful: % playful, tricky
+	<stem> = c l e a s 
+	{} = Adj1:<stemAch>
+	.
+
+Courageous: % courageous, cheerful
+	<stem> = m i s n i ú I_ l
+	{} = Adj2
+	.
+
+Severed: % severed, isolated
+	<stem> = s c o i t e
+	{} = Adj3
+	.
+
+/* */
+
+% adjective vocabulary, from dictionary }
+
+% vocabulary, from dictionary }
+
+% irregular verb forms start here
+#hide IrregCatch IrregHear1 IrregHear2 IrregMake IrregSay IrregGet IrregSee IrregCome IrregEat IrregGo IrregGive IrregBe .
+
+IrregCatch: % catch; give birth to; win; bring, take
+	{stem} = b e i r
+	{stem future} = b é a r
+	{stem past} = r u g
+	{stem conditional} = <stem future>
+	{verbalAdjectiveSuffix} = th e 
+	{verbalNoun} = b r e i th % special case
+	<> = Conj1
+	.
+
+IrregHear1:
+	{stem} = c l u i n
+	{stem past} = c u a l a
+	{gerundSuffix} = s t i n
+	{autonomous past} = FirstWord Separate ch u a l a - th a s QueryMark 
+	<> = Conj1
+	.
+
+IrregHear2: % indistinguishable from Hear1 in the past
+	{stem} = c l o i s
+	{stem past} = c u a l a
+	{gerundSuffix} =  t e á i l
+	{autonomous past} = FirstWord Separate ch u a l a - th a s QueryMark 
+	<> = Conj1
+	.
+
+IrregMake: % make; do
+	{stem} = d é a n
+	{stem past} = r i n n e
+	{stem past dependent} = d e a r n a
+	% for autonomous, can't depend on Verb to resolve dependencies:
+	{stem past negative/dependent} =+= <>
+	{stem past interrogative/dependent} =+= <>
+	{gerundSuffix} = a mh 
+	{verbalAdjectiveSuffix} = t a
+	<> = Conj1:<noR>
+	.
+
+IrregSay: % "abair"
+	{stem} = d e i r
+	{present} = ! % present is like tá: deirim, deir tú, ..., deirimid; deirtear
+	{stem immediate} = d e i r
+	{stem pastHabitual} = O_ d e i r % has a present-habitual meaning
+	{stem future} = O_ d é a r
+	{stem conditional} = <stem future>
+	{stem past} = O_ d ú i r t
+	{stem past 1 pl} = O_ d ú r
+	{stem past autonomous} = O_ d ú r
+	{stem past dependent} = d ú i r t
+	{stem imperative} = a b I_ r
+	{verbalNoun} = r á
+	{verbalAdj} = r á i t e
+	<> = Conj1:<noR plainNi hasImmediate>
+	.
+
+IrregGet: % take, get
+	{stem} = f a i gh
+	{stem past} = O_ f u a i r
+	{stem past dependent} = f u a i r
+	{stem future} = gh e o bh I3
+	{stem future dependent} = f a i gh I3
+	{stem future autonomous} = f a i gh
+	{stem future autonomous declarative positive} = gh e o
+	{stem conditional} = <stem future>
+	{stem conditional 2 sg declarative positive} = g e o
+	{stem conditional 2 sg} = f a i gh % no I3 for dependent forms
+	{stem conditional autonomous} = <stem future autonomous>
+	{stem conditional interrogative} = <stem future dependent>
+	% {stem conditional 2 sg declarative negative} = <stem future dependent> f
+	% {stem conditional 2 sg interrogative positive} = <stem future dependent> f
+	{stem conditional negative} = <stem future dependent>
+	{autonomous past} = FirstWord Separate f u a r - th a s QueryMark 
+	{verbalNoun} = f á i l
+	{verbalAdjectiveSuffix} = t e
+	<> = Conj1:<noR eclipseNi>
+	.
+
+IrregSee: 
+	{stem} = f e i c
+	{stem past} = c o n a i c
+	{stem past dependent} = f a c a
+	{past autonomous positive declarative} = FirstWord Separate c o n a c th a s % independent
+	{past autonomous} = FirstWord:<noR past> f a c th a s % dependent form
+	{verbalAdjectiveSuffix} = th e
+	{gerundSuffix} = e á i l
+	<> = Conj1:<noR>
+	.
+
+IrregCome:
+	{stem} = t a g % present, past habitual, subjunctive, imperative
+	{stem imperative 2 sg} = t a r
+	{stem past} = t á i n i g
+	{stem past 1 pl} = t á n g
+	{stem future} = t i o c
+	{stem conditional} = <stem future>
+	{past autonomous} = FirstWord Separate t á n g th a s
+	{verbalAdj} = t a g th a
+	{verbalNoun} = t e a ch t
+	<> = Conj1
+	.
+
+IrregEat:
+	{stem} = i th
+	{stem future} = i o s
+	{stem conditional} = <stem future>
+	{verbalAdj} = i t e
+	{gerundSuffix} = e
+	<> = Conj1
+	.
+
+IrregGo:
+	{stem} = t é i gh
+	{stem present} = t é
+	{stem past} = d e a ch a i gh
+	{stem past 1 pl} = d e a ch
+	{stem past positive declarative +1} = c u a i gh
+	{past autonomous positive declarative} = FirstWord Separate ch u a th a s % independent
+	{past autonomous} = FirstWord:<noR> d e a ch th a s % dependent form
+	{stem future} = r a ch I3
+	{stem future 2 sg} = r a ch
+	{stem future autonomous} = r a ch
+	{stem conditional} = <stem future>
+	{verbalNoun} = d u l
+	{verbalAdj} = d u l t a
+	<> = Conj1:<noR>
+	.
+
+IrregGive: % give, bring
+	{stem} = t u g
+	{stem future} = t a bh a r
+	{stem conditional} = <stem future>
+	{stem imperative 2 sg} = t a bh a i r
+	{verbalNoun} = t a bh a i r t
+	{verbalAdjectiveSuffix} = th a 
+	<> = Conj1
+	.
+
+IrregBe: % substantive verb
+	% used when the predicate is an adjectival or prepositional phrase
+	% "present" means "habitual"
+	{stem} = b í
+	{stem immediate} = t á
+	{stem immediate negative !interrogative} = ; l
+	{stem immediate interrogative} = f u i l
+	{stem past} = r a I_ bh
+	{stem past 1 pl negative} = r a bh
+	{stem past 1 pl interrogative} = r a bh
+	{stem past declarative positive} = b í
+	{stem past declarative positive autonomous} = bh í
+	{stem future} = b e I3
+	{stem future autonomous} = b e i
+	{stem conditional autonomous} = b e i
+	{stem conditional} = b e I3
+	{stem conditional 2 sg} = b e i
+	{stem subjunctive} = r a I_ bh
+	{stem subjunctive autonomous} = r a bh
+	{verbalNoun} = bh e i th
+	{past declarative positive} =+= Conj2:<autonBe>
+	{autonomous present} = Conj2:<autonomous>
+	{autonomous imperative} = Conj2:<autonomous>
+	{verbalAdjectiveSuffix} = ! % no verbal adjective
+	{} = Conj1:<hasImmediate noSubjunctiveEnding autonBe>
+	.
+
+/* */
+
+% Verb rules {
+
+#hide Conj1 .
+Conj1:
+	<> = Verb:<conj1>
+	.
+
+#hide Conj1igh .
+Conj1igh:
+	{gerundSuffix} = 
+	{endingPast} = i gh
+	<> = Verb:<conj1>
+	.
+
+#hide Conj2 .
+Conj2:
+	<> = Verb:<conj2>
+	.
+
+#hide Conj2igh .
+Conj2igh:
+	{endingPast} = i gh
+	<> = Verb:<conj2>
+	.
+
+#hide Verb .
+Verb: 
+	{} = FirstWord <stem> - VerbEnding QueryMark
+	{immediate !hasImmediate} = !
+	{autonomous} = FirstWord Separate "<stem autonomous>" - AutonomousEnding QueryMark
+	{verbalAdj} = "<stem>" - "<verbalAdjectiveSuffix>"
+	{verbalNoun} = "<stem>" - "<gerundSuffix>"
+	{gerund} = a g , "<stem>" - "<gerundSuffix>"
+	{stem past interrogative} = "<stem dependent past>"
+	{stem past negative} = "<stem dependent past>"
+	{stem dependent past} = "<stem>" % some verbs override
+	{stem future interrogative} = "<stem dependent future>"
+	{stem future negative} = "<stem dependent future>"
+	{stem dependent future} = "<stem>" % some verbs override
+	{stem} = "<stem>"
+	{endingPast} = 
+	{verbalAdjectiveSuffix} = I+ t e % some verbs override
+	{gerundSuffix} = a dh % some verbs override
+	.
+
+#hide FirstWord .
+FirstWord:
+	% the following lines are sorted this way:  sort -k 1.12,1.25 -k 1.3,1.5 -k 1.39
+	{negative declarative   imperative } = n á , h_
+	{negative declarative   subjunctive} = n á r , l_
+	{negative declarative              } = n í , l_
+	{negative declarative   immediate   } = n í ,
+	{negative declarative   past  !noR} = n í o r , l_
+	{negative declarative   past  noR plainNi} = n í , % abair: ní dúirt
+	{negative declarative   past  noR eclipseNi} = n í , n_ % faigh: ní bhfuair
+	{negative declarative   future noR eclipseNi} = n í , n_ % faigh: ní bhfaighidh
+	{negative declarative   conditional noR eclipseNi} = n í , n_ % faigh: ní bhfaighinn
+	{positive declarative              } =
+	{positive declarative   $historical} = d_
+	{positive declarative   subjunctive} = g o , n_
+	{positive declarative   past   autonomous} = 
+	{         interrogative imperative } = !
+	{negative interrogative subjunctive} = !
+	{negative interrogative            } = n a ch , n_
+	{negative interrogative past  !noR} = n á r , l_
+	{positive interrogative            } = a n , n_
+	{positive interrogative past  !noR} = a r , l_
+	.
+
+#hide Separate .
+Separate:
+	{past} = O_ 
+	{} =
+	.
+
+#hide PersonAnalytic .
+PersonAnalytic:
+	{1 sg} = m é
+	{2 sg} = t ú
+	{3 sg} = s é % masculine form; feminine is sí
+	{1 pl} = ! % no analytic ending, only synthetic
+	{2 pl} = s i bh
+	{3 pl} = s i a d
+	.
+
+#hide PersonSynthetic .
+PersonSynthetic:
+	{1 sg            } = m
+	{1 sg $historical} = n n
+	{1 pl past  } = m a r
+	{1 pl            } = m i d % present, future, subjunctive
+	{1 pl pastHabitual} = m i s
+	{1 pl conditional} = m i s
+	{1 pl imperative } = m i s
+	{2 pl            } = g í % only in imperative
+	{3 pl            } = d í s
+	.
+
+#hide ConjVowel1 .
+ConjVowel1: 
+	{conj1} = i
+	{conj2} = í
+	.
+
+#hide ConjVowel2 .
+ConjVowel2: 
+	{conj1} = a
+	{conj2} = í o
+	.
+
+#hide VerbEnding .
+VerbEnding:
+	% {habitual ++} = <pastHabitual> % all endings agree
+	% the following lines are sorted this way:  sort -k 1.8,1.14 -k 1.2 
+	{1                     } = ConjVowel1 PersonSynthetic
+	{!2   conditional conj2} = e o i      PersonSynthetic
+	{1    conditional conj1} = I2 f i        PersonSynthetic
+	{2 pl conditional conj1} = I2 f a dh ,   PersonAnalytic
+	{2 pl conditional conj2} = e o dh ,   PersonAnalytic
+	{2 sg conditional conj1} = I2 f á
+	{2 sg conditional conj2} = e o f á
+	{3 pl conditional conj1} = I2 f i        PersonSynthetic
+	{3 sg conditional conj1} = I2 f a dh ,   PersonAnalytic
+	{3 sg conditional conj2} = e o dh ,   PersonAnalytic
+	{     future      conj1} = I2 f i dh ,   PersonAnalytic
+	{     future      conj2} = e o i dh , PersonAnalytic
+	{1 pl future      conj1} = I2 f i        PersonSynthetic
+	{1 pl future      conj2} = e o i      PersonSynthetic
+	{     imperative       } = ConjVowel1 PersonSynthetic
+	{2 sg imperative       } = I+ "<endingPast>"
+	{3 sg imperative       } = ConjVowel2 dh , PersonAnalytic
+	{2 pl pastHabitual        } = ConjVowel2 dh , PersonAnalytic
+	{2 sg pastHabitual   conj1} = I+ t á
+	{2 sg pastHabitual   conj2} = í t e á
+	{3 pl pastHabitual        } = ConjVowel1       PersonSynthetic
+	{3 sg pastHabitual        } = ConjVowel2 dh ,  PersonAnalytic
+	{!1   present          } = ConjVowel2 n n , PersonAnalytic
+	{!1   immediate         } = , PersonAnalytic
+	{     past       +} = I+ "<endingPast>" , PersonAnalytic
+	{1 pl past        } = ConjVowel2       PersonSynthetic
+	{     subjunctive conj1} = @ ,              PersonAnalytic
+	{     subjunctive conj1 noSubjunctiveEnding} = I+ ,    PersonAnalytic
+	{     subjunctive conj2} = í ,              PersonAnalytic
+	{1 pl subjunctive      } = ConjVowel1 PersonSynthetic
+	.
+
+#hide AutonomousEnding .
+AutonomousEnding: 
+	% the following lines are sorted this way:  sort -k 1.8,1.14 -k 1.2 
+	{            conj1} = I+ t a r % imperative, present, subjunctive
+	{            conj2} = í t e a r % imperative, present, subjunctive
+	{autonBe    positive conj1} = th a r % imperative, present, subjunctive
+	{future      conj1 +2} = I2 f a r
+	{future      conj2} = e o f a r
+	{pastHabitual   conj1 +2} = I+ t í % including hasImmediate
+	{pastHabitual   conj2} = í t í
+	{past       +} = ConjVowel2 dh
+	{past  autonBe     +1} = ConjVowel2 th a s
+	{past  autonBe     negative +1} = th a s
+	{conditional conj1 +2} = I2 f í
+	{conditional conj2} = e o f a í
+	.
+
+#hide QueryMark .
+QueryMark:
+	{interrogative} = ?
+	<> = 
+	.
+
+% Verb rules } 
+
+% Noun rules {
+
+#hide Noun NounM1 NounF2 NounM3 NounF3 NounM4 NounF4 Article Noun3 Noun4 .
+
+NounM1: % bád, bacach, peann, páipéar
+	{nounSuffix nominative sg stemEann} = e a nn
+	{nounSuffix nominative sg stemR} = a r
+	{nounSuffix genitive sg} = I+
+	{nounSuffix genitive sg stemAch} = i gh
+	{nounSuffix genitive sg stemEann} = i nn 
+	{nounSuffix genitive sg stemR} = i r
+	{nounSuffix nominative pl} = <nounSuffix genitive sg>
+	{nounSuffix genitive pl} = <nounSuffix nominative sg>
+	<> = Noun:<masculine>
+	.
+
+NounF2: % beach, bos, scornach, eaglais
+	{nounSuffix nominative sg stemNach} = n a ch
+	{nounSuffix genitive sg} = I+ e
+	{nounSuffix genitive sg stemAch} = ch I+ e
+	{nounSuffix genitive sg stemNach} = n a í
+	{nounSuffix genitive sg stemAis} = e
+	{nounSuffix nominative pl} = <nounSuffix nominative sg> a
+	{nounSuffix nominative pl stemAis} = <nounSuffix nominative sg> í
+	{nounSuffix genitive pl} = <nounSuffix nominative sg>
+	{nounSuffix genitive/nominative pl stemAis} =+= <>
+	<> = Noun:<feminine>
+	.
+
+NounM3: % cainteoir, gnólacht, tincéir
+	<> = Noun3:<masculine>
+	.
+
+NounF3: % admháil, beannacht, ban-ab
+	<> = Noun3:<feminine>
+	.
+
+Noun3:
+	{nounSuffix nominative sg stemR} = r I+
+	{nounSuffix nominative pl stemR} = I+ r í
+	{nounSuffix nominative pl stemAil} = a ch a
+	{nounSuffix genitive sg} = a
+	{nounSuffix genitive sg stemR} = a r a
+	{nounSuffix nominative sg} = I+
+	{nounSuffix nominative pl} = I+ í
+	{nounSuffix genitive/nominative pl} =+= "<>"
+	<> = Noun
+	.
+
+
+Noun4: % both genders
+	{nounSuffix nominative sg stemU} = ú
+	{nounSuffix genitive/nominative sg} =+= <>
+	{nounSuffix genitive sg stemU} = i th e
+	{nounSuffix nominative pl} = í
+	{nounSuffix nominative pl stemAi} = I+ i th e
+	{nounSuffix nominative pl stemU} = u_ i th e
+	{nounSuffix genitive/nominative pl} =+= <>
+	<> = Noun
+	.
+
+NounM4: % bata, féirin, císte, rúnaí, ordú, cruinniú
+	<> = Noun4:<masculine>
+	.
+
+NounF4: % bearna, comhairle
+	<> = Noun4:<feminine>
+	.
+
+Article: 
+	{definite masculine nominative sg} = a n , t_
+	{definite masculine genitive sg} = a n , l2
+	{definite feminine nominative sg} = a n , l1
+	{definite feminine genitive sg} = n a , h_
+	{definite nominative pl} = n a , h_
+	{definite genitive pl} = n a , n_
+	{indefinite} = 
+	.
+
+Noun:
+	{nounSuffix nominative sg} = 
+	{nounSuffix nominative sg stemAch} = a ch
+	<> = Article "<stem>" "<nounSuffix>"
+	.
+
+% Noun rules }
+
+% Adjective rules {
+
+#hide Adj1 Adj2 Adj3 Adj .
+
+Adj1:
+	{adjSuffix nominative sg stemAch} = a ch
+	{adjSuffix genitive sg masculine stemAch} = a i gh
+	{adjSuffix genitive sg feminine} = I+ @
+	{adjSuffix genitive sg feminine stemAch} = í
+	{adjSuffix nominative pl stemAch} = a ch a
+	{adjSuffix genitive pl stemAch} = a ch
+	<> = Adj
+	.
+
+Adj2:
+	{adjSuffix nominative sg} = I+
+	{adjSuffix genitive sg feminine} = @
+	{adjSuffix genitive pl} = I+
+	<> = Adj
+	.
+
+Adj3:
+	{adjSuffix} =
+	<> = Adj
+	.
+
+Adj: 
+	{adjSuffix genitive sg masculine} = I+ % but not Adj3
+	{adjSuffix nominative pl} = @ % but not Adj3
+	{adjSuffix} = % but not many forms in Adj1 and Adj2
+	{$gender} =+= "<stem>" "<adjSuffix>"
+	.
+
+% Adjective rules }
+
+
+#vars $dental: t d .
+#sandhi , ; => . % níl
+#sandhi th - t => - t . % caith-tar => cait-ear
+#sandhi - => . % [default]
+#sandhi A_ $consonant* I+ => a i $1 . % ceang A_ l I+ => ceangail
+#sandhi A_ $consonant* A+ => a $1 . % ceang A_ l A+ => ceangal
+#sandhi A_ => . % [default]
+#sandhi A+ => . % [default]
+#sandhi I3 I2 f => . % gheobhfaidh => gheobhaidh
+% #sandhi I3 => . % default; should not be needed
+#sandhi I4 I2 => i . % lé I4 - fidh => léifidh
+#sandhi I2 => . % default
+#sandhi I4 => I_ . % default
+#sandhi I1 $consonant I+ t => $1 t . % thiola I1 c I+ t á => thiolactá
+#sandhi I1 => I_ . % default
+#sandhi í I+ $consonant => i $1 . % d'fhitea
+#sandhi í I+ $vowel => i $1 . % d'fhigh
+#sandhi I_ $consonant I+ => i $1 .
+#sandhi I_ $consonant $consonant I+ => i $1 $2 . % post
+#sandhi I_ I+ => i . % crá I_ I+ tea => cráitea
+#sandhi I_ => . % [default]
+#sandhi I+ => . % [default]
+#sandhi $slenderVowel $consonant $broadVowel => $1 $2 e $3 .
+#sandhi $slenderVowel $consonant $consonant* $broadVowel => $1 $2 $3 e $4 .
+#sandhi $broadVowel $consonant u_ => $1 $2 u .
+#sandhi $broadVowel $consonant $consonant* u_ => $1 $2 $3 u .
+#sandhi u_ => . % [default]
+#sandhi $broadVowel $consonant $slenderVowel => $1 $2 a $3 .
+#sandhi $broadVowel $consonant $consonant* $slenderVowel => $1 $2 $3 a $4 .
+#sandhi @ => . % purpose has been served.
+#sandhi a e o => ó . % codlaeofar => codlófar
+#sandhi á a => á . % cráann => cránn
+#sandhi ó a => ó . % dóaim => dóim
+#sandhi í a => í o . % níann => níonn; this is a spelling rule
+#sandhi í i => í . % fíim => fím
+#sandhi e í => í . % cohairleí => comhairlí
+#sandhi $vowel \1 => $1 . % i i, í í, a a
+#sandhi l2 $dental => $1 . % an,l2 tincéir => an,tincéir; also dorais
+#sandhi l2 => l1 .
+#sandhi l1 s c => s c . % an,l1 scornach => an,scornach
+#sandhi l1 s => t s . % an,l1 sráid => an,tsráid
+#sandhi l1 => l_ . % [default]
+#sandhi l_ $vowel => $1 . % no d'
+#sandhi l_ f => fh . % no d'; not pronounced at all.
+#sandhi l_ => d_ . % [default]
+#sandhi d_ b => bh . % pronounced [w/v] (broad/slender)
+#sandhi d_ c => ch . % d_ caith => chaith; pronounced [x]
+#sandhi d_ d => dh . % d_ dó => dhó; pronounced [ɣ/j] (broad/slender)
+#sandhi d_ f => d'fh . % d_ feicfinn => d'fheicfinn; pronounced [d]
+#sandhi d_ gh => gh . % protect from the next rule
+#sandhi d_ g => gh . % pronounced [ɣ]
+#sandhi d_ m => mh . % pronounced [w/v] (broad/slender)
+#sandhi d_ p => ph . % pronounced [f]
+#sandhi d_ s => sh . % pronounced [h]
+#sandhi d_ t => th . % d_ tóg => thóg; pronounced [h]
+#sandhi d_ $vowel => d' $1 . % d_ ól -> d'ól
+#sandhi d_ => . % [default]
+#sandhi O_ => . % a r , l_ O_ t => ar , O_ t => a r , t
+#sandhi n_ b => mb . % n_ beannaí => mbeannaí; pronounced [m]
+#sandhi n_ c => gc . % n_ caitheadth => gcaitheadth; pronounced [g]
+#sandhi n_ d => nd . % n_ n_dorn => ndorn; pronounced [n]
+#sandhi n_ f => bhf . % pronounced [w/v] (broad/slender)
+#sandhi n_ g => ng . % n_ goide => ngoide; prounounced [ŋ]
+#sandhi n_ p => bp . % n_ placann => bplacann; pronounced [b]
+#sandhi n_ t => dt . % n_ tógaim => dtógaim; pronounced [d]
+#sandhi n , n_ $vowel => n , $1 . % an n_ólar => an ólar
+#sandhi n_ $vowel => n - $1 . % n_ólar => n-ólar; pronounced [n]
+#sandhi n_ => . % default
+#sandhi h_ $vowel => h $1 . % ná h_óladh => ná hóladh
+#sandhi h_ => . % [default]
+#sandhi t_ $vowel => t - $1 .
+#sandhi t_ => . % [default]
+
+/* verbs { */
+#show <$tense :: $mood :: $polarity :: $number :: $person> .
+% #show <$tense :: declarative :: positive :: $number :: $person> .
+#show <$otherForms> .
+% #show <autonomous :: $tense :: $mood :: $polarity > .
+#show <autonomous :: $tense :: declarative :: $polarity > .
+/* verbs } */
+/* nouns { */
+#show <$number :: $case :: $definiteness> .
+/* nouns } */
+/* adjectives { */
+#show <$number :: $case :: $gender> .
+/* adjectives } */
+
+% make tags GOAL=irish LG=katr

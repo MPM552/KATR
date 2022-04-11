@@ -1,0 +1,212 @@
+/*
+Yoruba morphology.
+Authors:
+	Raphael Finkel <raphael@cs.uky.edu>
+	Túnjí Ọdẹ́jọbí <t.odejobi@4c.ucc.ie>
+Date: 10/2008
+
+Copyright © 2009
+
+This software is covered by the GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007.
+http://www.gnu.org/licenses/gpl.txt
+
+*/
+
+#vars $tense: present past continuous future .
+#vars $polarity: positive negative .
+#vars $person: 1 2Older 3Older 2NotOlder 3NotOlder .
+#vars $number: sg pl .
+#vars $strength: normal emphatic .
+#vars $vowel: a e ẹ i o ọ u an en ẹn in on ọn un .  % the n forms are nasalized
+#vars $tone:  ́  ̀  ̌  ̂ . % mid tone is not marked
+
+% vocabulary, lexicon {
+
+/* verbs { */
+
+Take:
+	<stem> = m un ́
+	<> = Verb
+	.
+
+See:
+	<stem> = r i ́
+	<> = Verb
+	.
+
+Sit:
+	<stem> = j o ́ k o ̌
+	<> = Verb
+	.
+
+Meet:
+	<stem> = b a ́
+	<> = Verb
+	.
+
+Ferment:
+	<stem> = ba
+	<> = Verb
+	.
+
+Hit:
+	<stem> = b a ̀
+	<> = Verb
+	.
+
+Break:
+	<stem> = d a ́
+	<> = Verb
+	.
+
+BeGood:
+	<stem> = da
+	<> = Verb
+	.
+
+Pour:
+	<stem> = d a ̀
+	<> = Verb
+	.
+
+Shave:
+	<stem> = f a ́
+	<> = Verb
+	.
+
+Pull:
+	<stem> = f a ̀
+	<> = Verb
+	.
+
+BeStuck:
+	<stem> = g a ́
+	<> = Verb
+	.
+
+Spread:
+	<stem> = g a ̀
+	<> = Verb
+	.
+
+Sweep:
+	<stem> = gb a ́
+	<> = Verb
+	.
+
+Take1:
+	<stem> = gb a ̀
+	<> = Verb
+	.
+
+Come:
+	<stem> = w a ́
+	<> = Verb
+	.
+
+Search:
+	<stem> = wa
+	<> = Verb
+	.
+
+Exist:
+	<stem> = w a ̀
+	<> = Verb
+	.
+
+Lick:
+	<stem> = l a ́
+	<> = Verb
+	.
+
+Split:
+	<stem> = l a ̀
+	<> = Verb
+	.
+
+/* verbs } */
+
+/* verbs } */
+
+% uncomment the following line to remove all verbs
+% #hide Meet Ferment Hit Break BeGood Pour Shave Pull BeStuck Spread Sweep Take Take1 Come Search Exist Lick Split .
+
+% vocabulary, lexicon }
+
+% Verb rules {
+
+#hide Verb .
+Verb: 
+	{continuous negative} = <present negative>
+	{} = Person Negator1 Tense Negator2 , "<stem>" Ending
+	.
+
+Person: % number, person, tense, polarity
+	{1 sg} = mo
+	{1 sg negative} = mi
+	{1 sg future} = m
+	{1 pl} = a
+	{2Older} = ẹ
+	{2Older continuous} = ẹ ̀
+	{2Older continuous pl} = w ọn ́
+	{3Older positive !future} = w ọn ́
+	{3Older} = w ọn
+	{2NotOlder sg} = o
+	{2NotOlder pl} = ẹ
+	{2NotOlder continuous sg} = o ̀
+	{2NotOlder continuous pl} = ẹ ̀
+	{3NotOlder} = o ́
+	{3NotOlder negative sg} =  
+	{3NotOlder future} = y i ́
+	{3NotOlder pl ++} = <3Older>
+	.
+
+Negator1: % polarity, tense
+	{negative} = , (k) o ̀
+	{negative 3NotOlder sg} = k o ̀
+	{} = 
+	.
+
+Tense: % polarity, tense
+	{} =
+	{past} = , t i % negative and positive
+	{continuous positive} = , n ́ -
+	{future positive} = , o ̂
+	{future 1 sg positive} = , a ̌
+	{future 3NotOlder } = <future 3Older positive>
+	.
+
+Negator2: % polarity, tense
+	{future negative} = , n i ́ 
+	{past negative} =  ́ i ̀ % becomes i ̂
+	{} = 
+	.
+
+Ending: % strength
+	{} = 
+	{emphatic} = ↓ % replicate vowel with low tone
+	.
+
+% Verb rules } 
+
+/* verbs { */
+#show <$strength :: $polarity :: $tense :: $person :: $number > .
+/* verbs } */
+
+% ↓ means "repeat previous vowel at mid tone, or low if vowel was mid"
+#sandhi $vowel ↓ => $1 $1 ̀ .
+#sandhi $vowel $tone ↓ => $1 $2 $1 .
+#sandhi - , => . % "-" means "no word break"
+#sandhi $vowel ̌ => $1 ̀ $1 ́ . % spelling
+#sandhi $vowel ̂ => $1 ́ $1 ̀ . % spelling
+#sandhi an $tone => a $1 n . % spelling
+#sandhi en $tone => e $1 n . % spelling
+#sandhi ẹn $tone => ẹ $1 n . % spelling
+#sandhi in $tone => i $1 n . % spelling
+#sandhi on $tone => o $1 n . % spelling
+#sandhi ọn $tone => ọ $1 n . % spelling
+#sandhi un $tone => u $1 n . % spelling
+#alternative \(k\) o ̀ , n i ́ => kìóò .
+#alternative k o ̀ , n i ́ => kìóò .
+
+% vim:set filetype=KATR nospell tw=1000:

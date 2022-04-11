@@ -1,0 +1,1504 @@
+/*
+In KATR
+Hebrew morphology.
+Authors:
+	Gregory Stump <gstump@pop.uky.edu>
+	Raphael Finkel <raphael@cs.uky.edu>
+Date: started 10/2001 updated 12/2003
+
+Copyright © 2009
+
+This software is covered by the GNU GENERAL PUBLIC LICENSE Version 3, 29 June
+2007.
+http://www.gnu.org/licenses/gpl.txt
+
+See http://mcweb.mc.maricopa.edu/users/shoemaker/Hebrew/grammar.html
+for some of the forms.
+Also http://www.basicsofbiblicalhebrew.com/, in particular
+	http://www.basicsofbiblicalhebrew.com/storage/verb_parad.pdf .
+An online grammar is at http://www.chass.utoronto.ca/~decaen/hypertextbook/ .
+Most of the forms are taken from Gesenius.
+
+This theory covers Hebrew verb forms for perfect, imperfect, and present
+participle in all binyanim.  It includes all morphologically variant classes,
+such as ע"ו.  The theory uses Unicode characters in the 0x0500 block; it is
+represented in the UTF-8 encoding.
+
+Given a query on a lexical entry (such as Lead), we first analyze the root
+(node ANALYZE) to discover special morphological classes, such as y3
+(third-letter י).  We add an appropriate morphological marker to the query,
+which we then direct to a binyan-specific node (such as Piel).  That node might
+override defaults for the components of the surface form, namely a
+finite-prefix consonant and vowel (if any; the default is none), the three
+consonants (the default is the stem consonants), and the three vowels (no
+default except shwa for vowel3).  The binyan-specific node then invokes VERB,
+which provides defaults for the components.  VERB assembles the slots by
+concatenating the results of VERBPREFIX (imperfect forms have standard
+prefixes), the finite-prefix consonant and vowel, STEM (which assembles the
+three consonants and vowels), and VERBSUFFIX (verb forms have standard suffixes
+for subject-gender and subject-number agreement).  VERB then invokes SANDHI to
+process sandhi rules on the result of concatenation, and then REVERSE to
+convert logical to visual order.
+	
+TODO:
+	instead of finiteconsonantprefix and finitevowelprefix, try to embed those
+	ideas into VERBPREFIX, possibly based on a lookup of <binyan>.
+	The hurdle will be to account for methathesis in HITHPAEL.
+
+*/
+
+#hideInternal
+#hide PASSIVEQAL QAL QAL1 QAL2 QAL3 NIPHAL PIEL PUAL HIPHIL HOPHAL HITHPAEL .
+#atom  ́ @ ⁽ ⁾ .  %  ́: accent. @: not accented. ⁽: start of word. ⁾: end of word.
+
+#vars $tense: perfect imperfect narrative suggestive .
+	#vars $perfective: perfect suggestive .
+	#vars $imperfective: imperfect narrative .
+#vars $pausal: pausal connected .
+#vars $number: sg pl .
+#vars $person: 3 2 1 . % linguist's order
+% #vars $person: 1 2 3 . % students' order
+#vars $gender: masc fem .
+#vars $voice: active passive .
+
+#vars $consonant: א ב ג ד ה ו װ ז ח ט י כ ך ל ל- מ ם נ ננ ן ס ע פ ף צ ץ ק ר שׁ שׂ ת nc1 nc2 nc3.
+	% ל- is a weak ל that tends to elide with a following ל or ק
+	% ננ is a strong נ that refuses to elide with the following consonant (except נ)
+	#vars $finalConsonant: ך ם ן ף ץ .
+	#vars $hasFinalConsonant: כ מ נ פ צ .
+	#vars $noFinalConsonant: $consonant - $hasFinalConsonant - $finalConsonant .
+	#vars $begedkefet: ב ג ד כ פ ת .
+	#vars $guttural: ע ה ח א .
+		#vars $glottal: ע א .
+	#vars $labial: ב מ פ .
+#vars $dagesh:  ּ .
+#vars $vowel:  ַ a aa  ָ  ָה  ֶה  ְ וּ וֹ   ֻ  ִ  ִי יִ  ֹ  ֶ  ֵ  ֳ  ֲ  ֱ  ֹא  ָא  ֶא  ֵא  ֿ  ͎  ֶי  ֵי .
+	% a is a patakh that is treated as long before a guttural.
+	% aa is a patakh that becomes  ָ before אְ (a regular patakh becomes  ֵ)
+	%  ְ is resting shwa (shwa nakh);  ֿ is the moving shwa (shwa na)
+	#vars $spelledVowel:  ָה  ֶה וּ וֹ  ִי  ֹא  ָא  ֶא  ֵא  ֶי  ֵי.
+	#vars $unSpelledVowel: $vowel - $spelledVowel .
+	#vars $SN:  ֿ . % shwa na
+	#vars $longVowel:  ָ וּ  ִי  ֹ  ֵ  ֹא וֹ  ֵא  ֶי  ֵי .
+	#vars $soundAVowel:  ַ  ָ a aa .
+	#vars $nonAVowel: $vowel - $soundAVowel. % important before final ע
+	#vars $hatafVowel:  ֳ  ֲ  ֱ .
+	#vars $unaccentableVowel:  ְ  ֿ  ֳ  ֲ  ֱ .
+	#vars $accentableVowel: $vowel - $unaccentableVowel .
+#vars $accent:   ́ @ .
+#vars $letter: $vowel + $consonant + $accent + $dagesh.
+#vars $noAccent: $letter - $accentableVowel - $accent .
+#vars $notAccent: $letter - $accent .
+
+#hide SANDHI STEM PASSIVEQAL QAL1 PIEL NIPHAL PUAL HIPHIL HOPHAL .
+#hide REVERSE ROMANIZE ROOT3 NIPHALMG ROOT1 ROOT2 .
+#hide Arrive Guard Approach Lead Speak Separate Slaughter Stand Repeat Slay Say Finish Doom Slip Bless Send Surround BeHeavy BeSmall .
+#hide QAL1TEST QAL2TEST QAL3TEST NIPHALTEST PIELTEST PUALTEST HIPHILTEST HOPHALTEST HITHPAELTEST QAL1G1TEST NIPHALG1TEST HIPHILG1TEST HOPHALG1TEST QALG2TEST NIPHALG2TEST PIELG2TEST PUALG2TEST HITHPAELG2TEST QALG3TEST NIPHALG3TEST PIELG3TEST PUALG3TEST HIPHILG3TEST HOPHALG3TEST HITHPAELG3TEST .
+#hide FULL QAL QAL2 QAL3 HITHPAEL TEST .
+
+% { vocabulary
+
+Arrive:
+	<root> = נ ג ע
+	<> = HIPHIL:<ANALYZE:<"<root>">>
+	.
+
+Guard:
+	<root> = שׁ מ ר
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+
+BeHeavy:
+	<root> = כ ב ד
+	<> = QAL2:<ANALYZE:<"<root>">>
+	.
+
+BeSmall:
+	<root> = ק ט ננ
+	<> = QAL3:<ANALYZE:<"<root>">>
+	.
+
+Approach: % heteroclite; see Gesenius 78c
+	<root ++> = נ ג שׁ
+	{$perfective} = NIPHAL:<ANALYZE:<"<root>">>
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+
+Lead: % heteroclite; see Gesenius 78c
+	<root ++> = נ ח י
+	<> = QAL1:<ANALYZE:<"<root>">>
+	{$imperfective} = HIPHIL:<ANALYZE:<"<root>">>
+	.
+
+Speak:
+	<root> = ד ב ר 
+	{vowel2 $perfective 3 sg masc} =  ֵ
+	<> = PIEL:<ANALYZE:<"<root>">>
+	.
+
+Separate:
+	<root> = ב ד ל
+	<> = HIPHIL:<ANALYZE:<"<root>">>
+	.
+
+Slaughter:
+	<root> = ק ט ל
+	<> = NIPHAL:<ANALYZE:<"<root>">>
+	.
+
+Stand:
+	<root> = ע מ ד
+	% <> = QAL1
+	<> = HOPHAL:<ANALYZE:<"<root>">>
+	.
+
+Repeat:
+	<root> = ח ז ר
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+
+Slay:
+	<root> = שׁ ח ט
+	<> = NIPHAL:<ANALYZE:<"<root>">>
+	.
+
+Say:
+	<root> = א מ ר
+	{vowel2 $perfective sg 3 masc} =  ַ
+	<> = QAL2:<ANALYZE:<"<root>">>
+	.
+
+Finish:
+	<root> = ג מ ר
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+
+Doom:
+	<root> = ק ט ל
+	<> = HOPHAL:<ANALYZE:<"<root>">>
+	.
+
+Slip:
+	<root> = ק ט ל
+	<> = HITHPAEL:<ANALYZE:<"<root>">>
+	.
+
+Bless:
+	<root> = ב ר כ
+	<> = HITHPAEL:<ANALYZE:<"<root>">>
+	.
+
+Send:
+	<root> = שׁ ל ח
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+
+% vocabulary }
+
+ROOT1:
+	<$consonant#1> = $consonant#1
+	.
+ROOT2:
+	<$consonant#1 $consonant#2> = $consonant#2 
+	.
+ROOT3:
+	<$consonant#1 $consonant#2 $consonant#3> = $consonant#3 
+	.
+
+FINAL: % final form of several consonants
+	<נ> = ן
+	<מ> = ם
+	<כ> = ך
+	<צ> = ץ
+	<פ> = ף
+	<$noFinalConsonant> = $noFinalConsonant
+	.
+
+% we can omit REVERSE if we use fribidi.
+REVERSE: % Change from logical to visual order, and expand some vowels.
+	<> =
+	<$vowel> = <> $vowel % words can start with a vowel
+	% the first of the following rules has lower Panini precedence.
+	<$consonant $dagesh? $vowel? $accent?> = <> $consonant $dagesh? $vowel? $accent?
+	<$consonant $dagesh?  ִי $accent?> = <> י $consonant $dagesh?  ִ $accent? 
+	<$consonant $dagesh?  ָה $accent?> = <> ה $consonant $dagesh?  ָ $accent?
+	<$consonant $dagesh?  ֶה $accent?> = <> ה $consonant $dagesh?  ֶ $accent?
+	<$consonant $dagesh?  ָא $accent?> = <> א $consonant $dagesh?  ָ $accent?
+	<$consonant $dagesh?  ֶא $accent?> = <> א $consonant $dagesh?  ֶ $accent? % untested 
+	<$consonant $dagesh?  ֶי $accent?> = <> י $consonant $dagesh?  ֶ $accent?
+	<$consonant $dagesh?  ֵי $accent?> = <> י $consonant $dagesh?  ֵ $accent?
+	<$consonant $dagesh?  ֵא $accent?> = <> א $consonant $dagesh?  ֵ $accent?
+	<$consonant $dagesh?  ֹא $accent?> = <> א $consonant $dagesh?  ֹ $accent?
+	<$consonant $dagesh?  וֹ $accent?> = <> וֹ $consonant $dagesh? $accent? 
+	<$consonant $dagesh?  וּ $accent?> = <> וּ $consonant $dagesh? $accent? 
+	% the following is just a spelling rule.
+	<$consonant $dagesh?   ֿ $accent?> = <> $consonant $dagesh?  ֿ  ְ $accent?
+	.
+
+ROMANIZE: % Change from Unicode to Roman; use Lambdin's transliteration
+	<> = 
+	<א> = ' <>
+	<ב  ּ> = b <>
+	<ב> = b̲ <>
+	<ג  ּ> = g <>
+	<ג> = ḡ <>
+	<ד  ּ> = d <>
+	<ד> = d̲ <>
+	<ה> = h <>
+	<ו> = w <>
+	<ז> = z <>
+	<ח> = ḥ <>
+	<ט> = ṭ <>
+	<י> = y <>
+	<כ  ּ> = k <>
+	<כ> = k̲ <>
+	<ך  ּ> = k <>
+	<ך> = k̲ <>
+	<ל> = l <>
+	<מ> = m <>
+	<ם> = m <>
+	<נ> = n <>
+	<ן> = n <>
+	<ס> = s <>
+	<ע> = \` <>
+	<פ  ּ> = p <>
+	<פ> = p̄ <>
+	<ף  ּ> = p <>
+	<ף> = p̄ <>
+	<צ> = ṣ <>
+	<ץ> = ṣ <>
+	<ק> = q <>
+	<ר> = r <>
+	<שׁ> = ś <>
+	<שׂ> = š <>
+	<ת  ּ> = t <>
+	<ת> = t̲ <>
+	< ַ> = a <>
+	< ͎> = o <>
+	< ָ> = ā <>
+	< ָה> = āh <>
+	< ִ> = i <>
+	< ִי> = î <>
+	< ֵ> = ē <>
+	< ֵי> = ê <>
+	< ֵה> = ēh <>
+	< ֶ> = e <>
+	< ֶי> = ệ <>
+	< ֶה> = eh <>
+	< ֹ> = ō <>
+	<וֹ> = ô <>
+	< ֹה> = ōh <>
+	< ֻ> = u <>
+	<וּ> = û <>
+	< ְ> = <>
+	< ֿ> = ə <>
+	< ֲ> = ǎ <>
+	< ֱ> = ě <>
+	< ֳ> = ǒ <>
+	< ֹא> = ō' <>
+	<$accent> =  ́ <>
+	<$letter  ּ> = <$letter $letter>
+	.
+
+SANDHI: % all sandhi and spelling rules go here
+	% default rules
+		<$letter> = $letter <>
+		< ⁾ > = 
+		< ⁽ > = <>
+	% accent on last accentable vowel ("@" overrides) (sandhi)
+		<$accentableVowel#1 $noAccent* $accentableVowel#2 @ +1> = <$accentableVowel#1  ́ $noAccent* $accentableVowel#2>
+		<@> = <>
+		% < ́ $notAccent* @> = <$notAccent* @> % second accent wins if several
+		% should it say? < ́ $notAccent*  ́> = <$notAccent*  ́> % second accent wins if several
+		% <$vowel  ́ $letter* @ +1> = <$vowel  ́ $letter*> % accent overrides @ % unused
+		<$accent $letter $unaccentableVowel ⁾> = <$letter $unaccentableVowel ⁾>
+			% remove redundant accent marks on last syl. (spelling)
+	% rules converting a shwa nakh ( ְ) into a shwa na ( ֿ) (sandhi)
+		% < ⁽  $consonant $dagesh?  ְ> = <⁽ $consonant $dagesh?  ֿ> % rule ALEF
+		< ⁽ $consonant $dagesh?  ְ/ ֿ> =+= <> % rule ALEF
+		< ְ $consonant#1 $dagesh?  ְ/ ֿ $consonant#2> =+= <> % rule BET
+		<$longVowel $consonant  ְ/ ֿ +1> =+= <> % rule GIMEL; only non-accent vowel
+		<$dagesh  ְ/ ֿ> =+= <> % rule DALET
+		<$consonant#1 $dagesh?  ְ/ ֿ $consonant#1> =+= <> % rule HEH % untested
+		% < ֳ $consonant  ֿ> =  ָ <$consonant  ֿ> % וּדמְֳ۫עֳיֵ -> וּדמְֳ۫עָיֵ 
+		< ֿ/ ְ $consonant  ְ ⁾> =+= <>  % no shwa na before end
+	% shwa near start of word (sandhi)
+		<⁽ $letter#1  ְ  $guttural  ְ > == <⁽ $letter#1  ַ  $guttural  ֲ> % השֶׂעֲתַּ
+		<⁽ $letter#1  ְ  א  ְ > == <⁽ $letter#1  ֹא> % לכַאיֹ
+		<⁽  א  ְ $guttural  ְ +1> == <⁽ א  ֶ  $guttural  ֱ> % השֶׂעֱאֶ
+		<⁽  א  ְ ה  ְ +1> == < א  ֶ  ה  ְ> % אֶהְיֶה
+		<⁽  א  ְ א  ְ +1> == <⁽ א  ֹ> % לכַאֹ
+		<⁽  $letter#1  ֶ $guttural  ְ +1> == <⁽ $letter#1  ֶ $guttural  ֱ> % יתִּרְשַעֱהֶ
+		<⁽  $letter#1  ֶ ח  ְ +1> == <$letter#1  ֶ ח  ְ > % וּנבְשַׁ́חְנֶ
+		<⁽  $letter#1  ְ $guttural  ְ י > == <⁽ $letter#1  ִ  $guttural  ְ י> % היֶהְיִ
+		<⁽ $letter#1  ְ/ ִ  $letter#2  ְ > =+= <>  % וּלטְֿקְנִ
+		< ֿ/ ִ $letter#1  ְ > =+= <>  % רמֹגְיִּוַ 
+		<⁽ א  ְ/ ֶ  $letter  ְ > =+= <>  % דבַּכְאֶ
+		<$vowel א  ֿ/ ֶ  $letter  ְ > =+= <>  % רמֹגְאֶוָ 
+		<⁽ א  ְ י  ְ > = <⁽ א  ִי>  % בטַיאִ
+		<⁽ $letter  ִ י  ְ> = <⁽ $letter  ִי> % בטַייִ
+		<⁽ $letter#1  ְ/ ִ  $letter#2  ּ > =+= <> % לטֵקָּיִ
+		<⁽ א  ְ/ ֶ  $letter  ּ > =+= <>  % לטֵקָּאֶ
+		<⁽ א ֹ א  ְ> == <⁽ א ֹ>  % אֹמַר
+	% shwa near end of word (spelling)
+		<$unaccentableVowel ⁾> = % usually no shwa at end of word
+		<ך $unaccentableVowel ⁾> = ך  ְ % both kinds of shwa become  ְ
+		<ת  ּ  ְ ⁾> = ת ּ ְ % untested
+		< ְ $consonant  ְ ⁾> =  ְ FINAL:<$consonant>  ְ % there won't be a dagesh % untested
+	% initial vov
+		<⁽ ו  ֹ> = <⁽ י  ֹ> % בשֵׁיֹ
+	% multiple vowels (generated as an internal form only)
+		<$vowel#1 $accent? $vowel#2> = <$vowel2> % second usually wins:  וּאָרָ => וּארָ
+		<$vowel $accent?  ְ> = <$vowel $accent?> % shewa loses: תָילִ́גָּ
+		< ֹ $accent? $vowel#2> = < ֹ $accent?> % kholam wins: הנָאבֹ́תָּ
+		< ֵ $accent? א  ֶ> = < ֵא $accent?> % tsere wins: here
+		< ֵ $accent? $vowel#1 א $vowel#2> = < ֵא $accent?> % tsere wins: תאבֵהֵ
+		< ֹא  ְ> = < ֹא> % וּלכְֿאתֹּ
+	% final letter forms (spelling)
+		<$hasFinalConsonant $dagesh? $unSpelledVowel? ⁾> = <FINAL:<$hasFinalConsonant> $dagesh? $unSpelledVowel? ⁾>
+	% dagesh falls out of final letter except when preceeded by shwa
+		% בּסַנָ -> בסַנָ
+		<$accentableVowel $accent? $consonant  ּ  ְ ⁾> = <$accentableVowel $accent?  $consonant  ְ ⁾>
+	% kholam before shin: remove the kholam (spelling)
+		% < ֹ $accent? שׁ> = <$accent? שׁ>
+	% elision near waw (hypothetical for passive qal)
+		<$unaccentableVowel ו  ֻ> = < ֻ>
+	% elision of lamed 
+		<ל-  ְ ק> = <ק  ּ>
+		< ָ ל- $unaccentableVowel ל> = < ַ ל  ּ> % וּלּקַ
+		<ל-> = <ל>
+	% elision of nun 
+		<$vowel $accent נ  ְ נ> = $vowel $accent נ  ּ <> %  וּנּטֹ́קָ, הנָּטַ́קְתִּ
+		<$vowel $accent ננ  ְ נ> = $vowel $accent נ  ּ <> %  וּנּטֹ́קָ, הנָּטַ́קְתִּ
+		<$consonant#1 $dagesh? $vowel נ  ְ $consonant#2> = <$consonant#1 $dagesh? $vowel $consonant#2  ּ > % תָּשְׁגַּנִ
+		<ננ> = <נ>
+		<⁽ $consonant#1  ͎ נ  ְ $consonant#2 > = <⁽ $consonant#1  ֻ $consonant#2  ּ> % שׁגַּנֻ (פּ"נ 1 pl imp)
+	% beged-kefet rule: add dagesh to the beged-kefet letters (sandhi)
+		<⁽ $begedkefet> = <$begedkefet  ּ>
+		< ְ $begedkefet > =  ְ <$begedkefet  ּ >
+		< ְ $begedkefet  ְ ⁾ +1> =  ְ FINAL:<$begedkefet>  ּ  ְ % a spelling rule,
+			% but we need to repeat it here to avoid ambiguity
+	% missing vowel rule: adds dagesh (spelling)
+		<$consonant#1 $consonant#1> = <$consonant#1  ּ>
+	% vowel shift near end of word (sandhi)
+		< ֹ $accent? א $unaccentableVowel?  ⁾> = < ָ $accent? א $unaccentableVowel?  ⁾> % אצָמְיִ
+		% < ֹ $accent? ר $unaccentableVowel?  ⁾> = < ָ $accent? ר $unaccentableVowel?  ⁾> % רצָיָ
+	% vowel shifts near gutturals (sandhi)
+		<a> = < ַ>
+		<a $guttural  ְ> = <a $guttural  ֲ>
+		<aa> = < ַ>
+		<aa $accent? א  ְ> =  ָא <$accent?> % אצָמָ
+		<$guttural  ֿ> = <$guttural  ֲ> % חלַּשַׁאֲ
+		< ֹ א $unaccentableVowel> = < ֹא> % לכַאתֹּ
+		< ֵ $accent? א $unaccentableVowel> =  ֵא <$accent?> % אצֵמֹ (spelling)
+		< ָ $accent? א $unaccentableVowel> =  ָא <$accent?> % וּנאצָמָ (spelling)
+		<$letter  ֹ $accent? א $unaccentableVowel> = <$letter  ֹא $accent> % רמַאֹ (spelling)
+		< ָ $guttural  ְ > =  ָ $guttural < ֳ>
+		< ָ $guttural  ְ ⁾> =  ָ $guttural % חלָשְׁנִ (active participle)
+		< ͎ $guttural  ְ > =  ָ $guttural < ֳ> % דמַעֳהָ
+		% < ַ $guttural  ְ > =  ַ $guttural < ֲ>
+		% < ִ $glottal  ְ> =  ַ $glottal < ֲ> % הנָדְמֹ́עֲתַּ, but היֶהֿיִ
+		% < ֶ $glottal  ְ> =  ֶ $glottal < ֱ>
+		<$hatafVowel $consonant $dagesh?  ְ > = <FULL:<$hatafVowel> $consonant $dagesh?  ְ> % וּדּמְעֶנֶ, הלָכְאֶנֶ
+		< ִ ע  ּ> = < ֵ ע> % dagesh removal for ayin (but not for khes)
+		< ֶ ע  ּ> = < ֵ ע> % dagesh removal for ayin (but not for khes)
+		<ח  ּ> = <ח> % dagesh removal for khes, as in יתִּמְחַנִ
+		< ֶ  ́ א  ְ> = < ֶא  ́> % הנָאצֶ́מְתַּ
+		% < ַ $accent? א  ְ> =  ֵא <$accent?> % אצֵּמִ  (should not be Sandhi)
+		< ַ $accent? א  ְ> =   ָא <$accent?> % תָאבָּ́
+		% <א  ֶ א  ְ> = א ֹ <> % obsolete
+		< ִ ר ּ> = < ֵ ר >
+		< ַ ר ּ> = < ָ ר >
+			% Sometimes if the ר has a shwa, it becomes hataf-patakh, but
+			% according to Rabbi Smith, this change is optional.
+		< ֻ ר ּ> = < ֹ ר >
+		< ַ ח  ְ ת  ְ ⁾> =  ַ  ́ ח  ַ ת ּ  ְ % special for verbs only; 2nd sing fem perf
+		< ַ ע  ְ ת  ְ ⁾> =  ַ ע  ַ ת ּ  ְ
+		< ֵ $accent? ח  ְ> = < ַ $accent? ח  ְ> % הנָחְלַ́שְׁתַּ (hiphil imp pl 3 fem) 
+	% furtive patakh
+		<$nonAVowel $accent? ע  ְ ⁾> = $nonAVowel ע  ַ % עַדֵיֹ 
+		<$nonAVowel $accent? ח  ְ ⁾> = $nonAVowel ח  ַ % חַילִ́שְׁיַ
+		<$nonAVowel $accent? ה  ְ ⁾> = $nonAVowel ה  ּ  ַ % הַּיבִּ́גְיַ % untested
+	% shifts near initial stem-letter ו (for a י)
+		<⁽ $consonant  ִ ו  ְ> = <⁽ $consonant וֹ> % בשַׁוֹנ (niphal w1)
+		<⁽ $consonant a ו  ְ> = <⁽ $consonant וֹ> % בישִׁוֹי (hiphil w1)
+		<⁽ $consonant  ͎ ו  ְ> = <⁽ $consonant וּ> % בשַׁוּה (hophal w1)
+		<$consonant $dagesh? $unaccentableVowel  ו  ֵ> = <$consonant $dagesh?   ֵ> % בשֵׁיֵ (qal1 w1)
+		% <⁽ ו $accentableVowel> = <⁽ י $accentableVowel> % בשַׁיָ (qal)
+			% disabled; it conflicts with waw-consecutive
+	% shifts near initial prefix ו
+		<⁽ ו  ֿ $labial> = <⁽ וּ $labial> 
+		<⁽ ו  ְ $consonant  ְ +1> = <⁽ וּ $consonant  ְ> 
+	% vowel reduction
+		% The following is a step in removing the use of "anyvowel".  It
+		% doesn't work yet.
+		% <$vowel $consonant#2 $dagesh? $accentableVowel#3 $consonant#4 $accentableVowel#5 ⁾> = <$vowel $consonant#2 $dagesh?  ְ $consonant#4 $accentableVowel#5 ⁾>
+	.
+
+FULL: % expects a hataf vowel, results in the full equivalent
+	< ֳ> =  ָ
+	< ֲ> =  ַ
+	< ֱ> =  ֶ
+	.
+
+VERB:
+	{analysis} = ANALYZE:<"<root>">
+	{lengthener} =  ְ % for VERBSUFFIX 
+	{vowel3} =  ְ % for VERBSUFFIX 
+	{finiteconsonantprefix} = 
+	{finitevowelprefix} =  ְ
+	{shortVowel2} =  ְ % needed by STEM
+	{cons1} = ROOT1:<"<root>">
+	{cons2} = ROOT2:<"<root>">
+	{cons3} = ROOT3:<"<root>">
+	{1 fem +1} = ! % suppress replicas, if desired.
+		{1 fem/masc} =+= <> % needed if we don't suppress replicas
+	{3 $perfective pl fem} = ! % suppress replicas, if desired.
+	<> = ROMANIZE:<SANDHI:< ⁽ VERBPREFIX "<finiteconsonantprefix>" "<finitevowelprefix>" STEM VERBSUFFIX ⁾>>
+	% <> = SANDHI:< ⁽ VERBPREFIX "<finiteconsonantprefix>" "<finitevowelprefix>" STEM VERBSUFFIX ⁾>
+	{participle} = ROMANIZE:<SANDHI:<⁽ "<participleprefix>" "<cons1>" "<partvowel1>" "<cons2>" "<partvowel2>" "<cons3>"  ְ ⁾>>
+	% {participle} = SANDHI:<⁽ "<participleprefix>" "<cons1>" "<partvowel1>" "<cons2>" "<partvowel2>" "<cons3>"  ְ ⁾>
+	{participleprefix} = % empty by default
+	{partvowel1} = "<vowel1 perfect>" % default, but often overridden
+	{partvowel2} = "<vowel2 perfect 3 sg masc>" % default, but often overridden
+	.
+
+STEM: 
+	<> = "<cons1>" "<vowel1>" "<cons2>" <anyvowel2> "<cons3>" 
+	<anyvowel2> = "<vowel2>"
+	{anyvowel2 $imperfective pl fem a3} =  ֶ % הנָאצֶ́מְתִּ; "a3" means "lamed aleph"
+	{anyvowel2 $perfective 3 sg fem} = "<shortVowel2 $perfective>"
+	{anyvowel2 3 $perfective pl} = "<shortVowel2 $perfective>"
+	{anyvowel2 $imperfective 2 sg fem} = "<shortVowel2 $imperfective>"
+	{anyvowel2 $imperfective !1 pl masc} = "<shortVowel2 $imperfective>" % not pausal
+	{anyvowel2 pausal +4} = "<vowel2 pausal>"
+	/* TODO: instead of anyvowel, a rule of Sandhi: 
+		<$vowel $consonant $spelledVowel ⁾> =  ְ <$consonant $spelledVowel ⁾>
+	The problem is that this rule must be applied "early" in the Sandhi, before
+	the early parts of the word are adjusted.  Our one-pass Sandhi makes that
+	quite difficult.
+	*/
+	.
+
+VERBPREFIX:
+	% no vowel included for imperfective, because the vowel changes by binyan
+	<> = 
+	{suggestive} = ו  ְ
+	{imperfect} = ת
+	{imperfect 1 sg} = א 
+	{imperfect 3 masc} = י 
+	{imperfect 1 pl} = נ 
+	{narrative} = ו  ַ ת  ּ
+	{narrative 1 sg} = ו  ָ א 
+	{narrative 3 masc} = ו  ַ י  ּ
+	{narrative 1 pl} = ו  ַ נ  ּ
+	.
+
+VERBSUFFIX: % including vowel (typically shwa) on the last root consonant
+	{$perfective 1 sg} = "<vowel3>" ת  ִי @
+	{$perfective 2 sg masc} = "<vowel3>" ת  ָ @
+	{$perfective 2 sg fem} = "<vowel3>" ת   ְ
+	{$perfective 3 sg masc} =  ְ
+	{$perfective 3 sg fem} =  ָה
+	{$perfective 3 sg fem y3} = ת  ָה
+	{$perfective 1 pl} = "<vowel3>" נ וּ @
+	{$perfective 2 pl masc} = "<vowel3>" ת  ֶ מ
+	{$perfective 2 pl fem} = "<vowel3>" ת  ֶ נ
+	{$perfective 3 pl} = וּ 
+	{$imperfective sg} =  ְ
+	{$imperfective 2 sg fem} =  ִי
+	{$imperfective 1 pl ++} =  ְ % need ++ to override the following two rules
+	{$imperfective pl masc} = וּ 
+	{$imperfective pl fem} = "<lengthener>" נ  ָה @ % lengthener is usually  ְ, else  ֶי
+	.
+
+% { rules for binyanim; some with subclasses
+	%	QAL
+	%		QAL1
+	%		QAL2
+	%		QAL3
+	%	NIPHAL
+	%	PUAL
+	%	PIEL
+	%	HIPHIL
+	%	HOPHAL
+	%	HITHPAEL
+
+PASSIVEQAL:
+	<> = VERB
+	{binyan} = passiveqal
+	{finitevowelprefix $perfective} =
+	% {cons1}
+	{cons1 perfect w1} = י
+	% {vowel1}
+	{vowel1} =  ֻ
+	% {cons2}
+	{cons2} = ROOT2:<"<root>">  ּ
+	% {vowel2}
+	{vowel2} =  ַ 
+	{vowel2 pausal} =  ָ % תָּחְקָּלֻ
+	{participleprefix} = 
+	{partvowel1} =  ָ
+	{partvowel2} = וּ
+	.
+
+QAL: 
+	<> = VERB
+	{finitevowelprefix $perfective} =
+	{vowel1 $imperfective} =  ְ
+	{vowel1 narrative g1} =  ְ ́ % reduced by Sandhi to אֹ
+	{vowel1 $perfective} =  ָ
+		{vowel1 $perfective 2 pl} =  ְ % sandhi will change to  ֿ
+	.
+
+QAL1: 
+	<> = QAL
+	{binyan} = qal1
+	% {finitevowelprefix}
+		{finitevowelprefix a1 $imperfective} =  ֹ
+	% {cons1}
+		{cons1 $perfective w1} = י
+	% {vowel1}
+		{vowel1 imperfect w1} =  ֵ
+		{vowel1 narrative w1} =  ֵ ́
+		{vowel1 $imperfective w2 y2} = וּ ́ 
+		{vowel1 $imperfective w2 y2 a3} = וֹ ́ % אוֹביָ
+		{vowel1 $imperfective y2 !y3} =  ִי ́ % ןיבִיָ
+		{vowel1 $imperfective pl fem w2 y2} = וּ  
+		{vowel1 $imperfective pl fem w2 y2 a3} =   ֹ % הנָאבֹ́תָּ
+		{vowel1 $imperfective pl fem y2 !g1} =  ֵ  % הנָלְגֵתָּ, but הנָייֶהְתִּ
+		{vowel1 $perfective !3 y2} =  ַ  % תָּלְגַּ́
+		{vowel1 $perfective 3 y2 !a3} =  ָ  ́ % וּלגָּ́, but האָבָּ
+		{vowel1 $perfective y2 g1 y3 +1} =  ָ % התָ́יְהָ
+		{vowel1 $perfective mg !3} =  ַ % תָוֹבּ́סַ
+		{vowel1 imperfect mg !g1} =  ּ % בסֹּיִ cons1 gets dagesh, vowel1 disappears
+		{vowel1 narrative mg} =  ָ  % בסָיָּ́וַ (vowel1 on samekh)
+	% {cons2}
+		{cons2 y2 !y3} = 
+		{cons2 $imperfective mg} = 
+	% {vowel2}
+	{vowel2 $imperfective} =  ֹ
+		{vowel2 $imperfective connected !y3} =  ָ % not תִּהְיֶה
+		{vowel2 $imperfective y1 +1} =  ַ % בטַייִ
+		{vowel2 imperfect w1} =  ֵ
+		{vowel2 narrative w1} =  ֶ 
+		{vowel2 $imperfective a1 +1} =   ַ % לכַאתֹּ
+		{vowel2 $imperfective a1 pausal +1} =   ֵ % לכֵאתֹּ
+		{vowel2 $imperfective a3} =   ָ % אצָמְיִ
+		% {vowel2 $imperfective pausal} =  ָ % וּבכָּשְיִ, but וּתבֹּשְׁתִּ
+		{vowel2 $imperfective g2 !y3 +1} =   ַ % but החֶמְאֶ
+		{vowel2 $imperfective g3 !y3 +1} =   ַ 
+		{vowel2 $imperfective g2 !y3 pausal +1} =  ָ % באָשְאֶ, but יִרְאֶה
+		{vowel2 $imperfective g3 pausal +1} =  ָ % חמָצְתִּ
+			% if both w1 and g2/g3, the g2/g3 wins: עדַיֵ
+			{vowel2 $imperfective fem pl w1} =  ַ % not in colloquial speech
+		{vowel2 $imperfective y3} =  ֶה % הלֶגְיִ, החֶמְאֶ 
+		{vowel2 $imperfective pl fem y3} =  ֶי % הנָילֶ́גְתִּ
+		{vowel2 narrative mg} = % בסָיָּ́וַ (vowel2 on beys)
+	{vowel2 $perfective} = aa
+		{vowel2 $perfective pausal} =  ָ  ́ % רצָיָ
+		{vowel2 $perfective w1 pausal !a3 !g3} =  ֹ  ́ % לכֹיָ, but יתִּעְדָיָ
+		{vowel2 $perfective a3 g2 pausal} =  ֵ  ́ % האָרֵיָ
+		{vowel2 $perfective pausal pl 2} = aa % ןתֶּעְדַיְ
+		{vowel2 mg !3 $perfective ++} =
+		{vowel2 $perfective !3 y3} =  ִי % תָילִ́גָּ
+		{vowel2 $perfective 3 sg masc y3} =  ָה % הלָגָּ
+		{vowel2 y2 !y3 ++} = 
+	{shortVowel2 mg $perfective} =  ֲ
+	{shortVowel2 $imperfective y3} =  % ישִעֲתַּ
+	% {cons3}
+		{cons3 y3} =
+		{cons3 y3 passive} =  י % יוּלגָּ; only needed for participle
+	% {vowel3}
+		{vowel3 mg} = וֹ % תָוֹבּ́סַ
+	{finitevowelprefix $imperfective y2 !y3} =  ָ % ןיבִיָ
+	{finitevowelprefix $imperfective fem pl w2 !a3} =  ְ % הנָימֶ́וּקתְּֿ, but הנָאֹבתָּ
+	{finitevowelprefix narrative mg} =  ָ ́
+	% {lengthener}
+		{lengthener w2} =  ֶי % הנָימֶ́וּקתְּֿ
+		{lengthener w2 y2 a3} = % הנָאבֹ́תָּ
+	{partvowel1} =   ֹ
+		{partvowel1 y2} =  ָ % םקָ
+		{partvowel1 passive y2} = % םוּק
+		{partvowel1 passive mg} =  ָ % בוּבסָ
+	{partvowel2} =  ֵ
+		{partvowel2 y2} =
+	{partvowel2 y3} =  ֶה % הלֶגֹּ
+	% get by default: {partvowel1 passive} =  ָ
+	{partvowel2 passive} = וּ
+	.
+
+QAL2:
+	<> = QAL
+	{binyan} = qal2
+	{vowel2} =  ַ
+		{vowel2 $perfective sg 3 masc} =  ֵ % unless cons1 is guttural.  TODO
+	% participle vowels by default
+	{participle passive} = - 
+	.
+
+QAL3:
+	<> = QAL
+	{binyan} = qal3
+	{vowel2 $perfective} =  ֹ 
+		{vowel2 $perfective 2 pl} =  ͎
+		% TODO: really a rule of sandhi reducing O to o
+		% before a shva nakh in an unaccented syllable.
+	{vowel2} =  ַ
+	% {partvowel1 active} =  ָ
+	{partvowel2 active} =  ֹ
+	{participle passive} = - 
+	.
+
+NIPHAL: 
+	<> = VERB
+	{binyan} = niphal
+	%  finitevowelprefix usually default
+		{finitevowelprefix $perfective g1} =  ֶ % דמַעֱנֶ
+		{finitevowelprefix $perfective 3 y2} =  ָ %  םוֹקנָ
+		{finitevowelprefix $perfective 3 mg} =  ָ %  םוֹקנָ
+		{finitevowelprefix $perfective g1 y2 ++} =  ֵ % רוֹענֵ
+		{finitevowelprefix $imperfective a1 ++} =  ֵ % לכֵאָיֵ
+		{finitevowelprefix $imperfective g1} =  ֵ % וּשעָיֵ
+	{finiteconsonantprefix $perfective} = נ
+	% {cons1}
+		{cons1 $imperfective !g1} = ROOT1:<"<root>">  ּ
+	% {vowel1}
+	{vowel1 $imperfective} =  ָ
+		% {vowel1 $imperfective w2} =  ְ
+		{vowel1 y2 +1} = וֹ  ́
+		{vowel1 y2 pl 2 $perfective} = וֹ
+		{vowel1 y2 sg 2 $perfective} = וּ
+		{vowel1 y2 1 $perfective +1} = וּ
+		{vowel1 mg $imperfective} =  ַ ́ % יבִּסַּ́תִּ
+		{vowel1 mg $imperfective pl fem} =  ַ % הנָיבֶּ́סַּתִּ
+		% {vowel1 w2 pl 2 $perfective +1} =  ֹ % glitch in Gesenius p524
+	{vowel1 $perfective} =  ְ
+		{vowel1 $perfective 3 mg} =  ַ ́ % הבָּסַ́נָ
+		{vowel1 $perfective mg} =  ַ % תָוֹבּ́סַנְֿ
+	% {cons2} 
+		{cons2 y2 ++} =
+		{cons2 mg !y3} = % not on תַּרָאֶה
+	% {vowel2}
+		{vowel2 y2 ++} = 
+		{vowel2 mg ++} =
+		{vowel2 $perfective a3} =  ֵ % תָאצֵ́מְנִ
+	{vowel2 $imperfective} =  ֵ
+		{vowel2 $imperfective pl fem} =  ַ
+		{vowel2 $imperfective g3} =  ַ
+		{vowel2 $imperfective y3} =  ֶה % הלֶגָּיִ
+		{vowel2 $imperfective pl fem y3} =  ֶי % הנָילֶ́גָּתִּ
+		{vowel2 $imperfective pausal g3} =  ֵ % עַבֵשָאִ
+	{vowel2 $perfective} =  ַ
+		{vowel2 $perfective !3 y3} =  ֵי % תָילֵ́גְנִ
+		{vowel2 $perfective 1 pl y3} =  ִי % וּנילִ́גְנִ
+		{vowel2 $perfective 3 y3 ++} =  ָה % הלָגְנִ
+		{vowel2 $perfective pausal +2} =  ָ % התָחָ́שְנִ
+		{vowel2 $perfective 3 sg} = aa
+	% {cons3}
+		{cons3 y3} =
+		{cons3 mg} = ROOT3:<"<root>">  ּ % הבָּסַ́נָ
+	% {vowel3}
+		{vowel3 mg} = וֹ % תָוֹבּ́סַנְֿ
+		{vowel3 y2} = וֹ % תָוֹמ́וּקנְֿ
+	% {lengthener}
+		{lengthener mg} =  ֶי % הנָימֶ́וּקתְּֿ
+	{participle active} = -
+	{participleprefix} = "<finiteconsonantprefix perfect>" "<finitevowelprefix perfect>"
+		% we use all this to get דמָעֱנֶ for g1 situations.
+		{participleprefix y2} = נ  ָ % םוֹקנָ
+		{participleprefix mg} = נ  ָ % םוֹקנָ
+		{participleprefix y2 g1} = נ  ֵ % רוֹענֵ
+	% partvowel1 usually default:  ְ
+		{partvowel1 y2} =  ְ
+		{partvowel1 mg} =  ָ % בסָנָ
+	{partvowel2} =  ָ
+		{partvowel2 y2} = וֹ % םוֹקנָ
+		{partvowel2 y3} =  ֶה % הלֶגְנִ
+		{partvowel2 mg} = 
+	.
+
+PIEL: 
+	<> = VERB
+	{binyan} = piel
+		{binyan w2} = polel
+		{binyan mg} = poel
+	{finitevowelprefix $perfective} =
+	% {vowel1}
+	{vowel1 $imperfective} =  ַ
+	{vowel1 $perfective} =  ִ
+		{vowel1 w2 ++} = וֹ % ץצַוֹר
+		{vowel1 mg ++} = וֹ % ץצַוֹר
+		{vowel1 a1 g2} =  ֵ % רחַאֵ
+	% {cons2}
+	{cons2 !g2} = ROOT2:<"<root>">  ּ
+		{cons2 w2 +1} = ROOT3:<"<root>"> % םמֵוֹק
+		{cons2 mg +1} = ROOT3:<"<root>"> % בבֵוֹס
+	% {vowel2}
+	{vowel2 $imperfective} =  ֵ
+		{vowel2 $perfective !3 y3} =  ִי % תילִּגִּ
+		{vowel2 $perfective 3 y3} =  ָה % הלָּגִּ
+		{vowel2 $perfective 3 masc sg mg} =  ֵ % בבֵּוֹס
+		{vowel2 $perfective a3} =  ֵ % תָאצֵּמִ
+		{vowel2 $imperfective g3} =  ַ
+		{vowel2 $imperfective y3} =  ֶה % הלֶּגַיְֿ
+		{vowel2 $imperfective pl fem y3} =  ֶי % הנָילֶּ́גַתְּֿ
+	{vowel2 $perfective} =  ַ
+		{vowel2 $perfective sg 3 masc w2} =  ֵ % םמֵוֹק
+		{shortVowel2 w2} =  ֲ % המָמֲוֹק
+		{shortVowel2 mg} =  ֲ % הבָבֲוֹס
+	% {cons3}
+		{cons3 y3} =
+	{participleprefix} = מ  ְ
+	{partvowel1} =  ַ
+		{partvowel1 w2 ++} = וֹ % םמֵוֹקמְֿ
+		{partvowel1 mg ++} = וֹ % בבֵוֹסמְֿ
+	{partvowel2} =  ֵ
+		{partvowel2 y3} =  ֶה % הלֶּגֻמְֿ
+	{participle passive} = -
+	.
+
+PUAL: % passive of PIEL
+	<> = VERB
+	{binyan} = pual
+		{binyan w2} = polal
+		{binyan mg} = poal
+	{finitevowelprefix $perfective} =
+	% {vowel1}
+	{vowel1} =  ֻ
+		{vowel1 w2} = וֹ % םמַוֹק
+		{vowel1 mg} = וֹ %
+	% {cons2}
+	{cons2} = ROOT2:<"<root>">  ּ
+		{cons2 w2} = ROOT3:<"<root>">
+		{cons2 mg} = ROOT3:<"<root>">
+	% {vowel2}
+	{vowel2} =  ַ
+		{vowel2 3 sg} = aa
+		{vowel2 $perfective !3 y3} =  ֵי % תָילֵּ́גֻּ
+		{vowel2 $perfective 3 y3} =  ָה % הלָּגֻּ
+		{vowel2 $perfective a3} =  ֵ % תָאצֵּמֻ
+		{vowel2 $imperfective y3 +1} =  ֶה % הלֶּגֻיְֿ
+		{vowel2 $imperfective pl fem y3} =  ֶי % הנָילֶּ́גֻתְּֿ
+		{vowel2 $imperfective} = aa
+		{shortVowel2 w2} =  ֲ % המָמֲוֹק
+		{shortVowel2 mg} =  ֲ %
+	{cons3 y3} =
+	{participleprefix} = מ  ְ
+	{participle active} = -
+	% {partvowel1 passive} =  ֻ
+		{partvowel1 w2} = וֹ % םמָוֹקמְֿ
+		{partvowel1 mg} = וֹ %
+	{partvowel2} =  ָ
+	{partvowel2 y3} =  ֶה % הלֶּגֻמְֿ
+	.
+
+HIPHIL: 
+	<> = VERB
+	{binyan} = hiphil
+	{finiteconsonantprefix $perfective} = ה
+	% {finitevowelprefix}
+		{finitevowelprefix $perfective g1 !w2} =  ֶ % דימִעֱהֶ
+			% but w2 takes precedence:
+		{finitevowelprefix $perfective 3 w2} =  ֵ % וּמיקִ́הֵ
+		{finitevowelprefix $perfective w2 a3} =  ֵ % תאבֵהֵ
+		% {finitevowelprefix $perfective g2 y3} =  ֶ % האָרְהֶ is a special case
+		{finitevowelprefix $perfective 3 mg +1} =  ֵ % בסֵהֵ, לחֵהֵ
+		{finitevowelprefix $imperfective} = a % not  ַ, for first letter guttural
+		{finitevowelprefix w1 +1} = וֹ
+		{finitevowelprefix $imperfective w2} =  ָ % םיקִיָ
+		{finitevowelprefix imperfect mg} =  ָ % בסֵיָ
+		{finitevowelprefix narrative mg} =  ָ ́ % בסֶיָוַ
+		{finitevowelprefix $imperfective mg pl fem} =  ְ % הנָיבֶּ́סִתְּֿ
+		{finitevowelprefix y1 ++} =   ֵי % ביטִיהֵ
+	% {cons1}
+		{cons1 y1} =
+		{cons1 w1} =
+	% {vowel1}
+	{vowel1} =  ְ
+		{vowel1 y1} =
+		{vowel1 $perfective mg} =   ִ % תָוֹבּ́סִהֲ
+		{vowel1 $perfective 3 mg} =  ֵ ́ % הבָּסֵ́הֵ
+		{vowel1 $perfective a3 w2} =  ֵ ́ % תאבֵהֵ
+		{vowel1 $perfective 3 mg pausal} =   ַ  ́ % רפַהֵ
+		{vowel1 w2} = %
+		{vowel1 imperfect mg} =  ֵ ́ % הבָּסֵ́הֵ
+		{vowel1 imperfect mg g2} =  ַ % ערַנָ
+		{vowel1 narrative mg} =  ֶ  % בסֶיָוַ
+		{vowel1 $imperfective pl fem mg} =  ִ % הנָיבֶּ́סִתָּ
+	% {cons2}
+		{cons2 mg} =
+		{cons2 w2} =
+	% {vowel2}
+		{vowel2 mg ++} =
+	{vowel2 $imperfective} =  ִי ́
+		{vowel2 $imperfective pl fem} =  ֵ
+		{vowel2 $imperfective y3} =  ֶה % הלֶגְיַ
+		{vowel2 $imperfective pl fem y3} =  ֶי % הנָילֶ́גְתַּ
+		{shortVowel2 !y3} =  ִי ́ % but התָלְֿגְהִ
+	{vowel2 $perfective} =  ַ
+		{vowel2 $perfective 3 sg !y3 !mg} =  ִי ́ 
+		{vowel2 $perfective w2} =  ִי
+		{vowel2 $perfective !3 y3} =  ֵי % תָילֵ́גְהִ
+		{vowel2 $perfective 1 pl y3} =  ִי % וּנילִ́גְהִ
+		{vowel2 $perfective 3 masc y3} =  ָה % הלָגְהִ
+		{vowel2 $perfective 3 y3 pausal} =  ָ % התָקָשְהִ
+		{vowel2 $perfective a3} =  ֵ % תָאצֵ́מְהִ
+	{shortVowel2 mg ++} = 
+	% {cons3}
+		{cons3 y3} =
+		{cons3 mg} = ROOT3:<"<root>">  ּ % הבָּסַ́נָ
+	% {vowel3}
+		{vowel3 mg} = וֹ % תָוֹבּ́סַנְֿ
+		{vowel3 w2} = וֹ % תָוֹמ́יקִהֲ
+	% {lengthener}
+		{lengthener mg} =  ֶי % הנָימֶ́וּקתְּֿ
+	{participle passive} = -
+	{participleprefix} = מ a
+		{participleprefix w2} = מ  ֵ % םיקִמֵ
+		{participleprefix mg} = מ  ֵ % םיקִמֵ
+		{participleprefix y1} = מ  ֵי % ביטִימֵ
+	% {partvowel1}
+		{partvowel1} =  ְ
+	% {partvowel2}
+		{partvowel2 y3} =  ֶה % הלָגְמַ
+		{partvowel2 mg} =  ֵ % בסֵמֵ
+	.
+
+HOPHAL:
+	<> = VERB
+	{binyan} = hophal
+	% cons usually default
+		{cons2 w2} = % completely missing cons2
+	{finiteconsonantprefix $perfective} = ה
+	{finitevowelprefix} =  ͎
+		{finitevowelprefix a3 !w2} =  ֻ
+		{finitevowelprefix w2} = וּ
+		{finitevowelprefix mg} = וּ
+			% w2 supersedes a3: אבָוּה
+	% {vowel1}
+	{vowel1} =  ְ
+		{vowel1 w2} = % completely missing w2
+		{vowel1 mg} =  ַ % תָוֹבּ́סַוּה
+		{vowel1 3 mg} =  ַ ́ % הבָּסַ́וּה
+		{vowel1 $imperfective mg} =  ַ ́ % יבִּסַ́וּתּ
+		{vowel1 $imperfective mg fem pl} =  ַ % הנָיבֶּ́סַוּתּ
+	% {cons2}
+		{cons2 mg} =
+	% {vowel2}
+	{vowel2} = aa 
+	 	{vowel2 pausal} =  ָ  ́ 
+	 	{vowel2 $perfective sg 3 masc a3} = aa
+		{vowel2 $perfective !3 y3} =  ֵי %  תָילֵ́גְה͎
+		{vowel2 $perfective 3 y3} =  ָה % הלָגְה͎
+		{vowel2 $perfective a3} =  ֵ % תָאצֵ́מְהֻ
+		{vowel2 $imperfective y3} =  ֶה % הלֶגְי͎
+		{vowel2 $imperfective pl fem y3} =  ֶי % הנָילֶ́גְתּ͎
+		{vowel2 mg ++} =
+		{shortVowel2 mg ++} = 
+	% {cons3}
+		{cons3 y3} =
+		{cons3 mg} = ROOT3:<"<root>">  ּ % הבָּסַ́נָ
+	% {vowel3}
+		{vowel3 mg} = וֹ % תָוֹבּ́סַנְֿ
+	% {lengthener}
+		{lengthener mg} =  ֶי % הנָיבֶּ́סַוּתּ
+	{participle active} = -
+	{participleprefix} = מ  ͎
+		{participleprefix a3 !w2} = מ  ֻ
+		{participleprefix w2} = מ וּ
+		{participleprefix mg} = מ וּ % בסָוּמ
+	% {partvowel1}
+		{partvowel1 mg} =  ָ % בסָוּמ
+	% {partvowel2}
+	{partvowel2} =  ָ
+		{partvowel2 y3} =  ֶה % הלֶגְמ͎
+		{partvowel2 mg} = % בסָוּמ
+	.
+
+#hide METATH .
+METATH: % reverse first letters if needed; we are given first cons
+	<leader שׁ> = שׁ
+		<cons1 שׁ ++> = ת
+	<leader ס> = ס % untested
+		<cons1 ס ++> = ת % untested
+	<leader שׂ> = שׂ % untested
+		<cons1 שׂ ++> = ת % untested
+	<leader צ> = צ % untested
+		<cons1 צ ++> = ט % untested
+	<leader ז> = ז % untested
+		<cons1 ז ++> = ד % untested
+	<leader> = ת
+		<cons1 $letter> = $letter
+	.
+
+HITHPAEL: 
+	<> = VERB
+	{binyan} = hithpael
+	{cons1} = METATH:<cons1 ROOT1:<"<root>">>
+	{cons2 !g2} = ROOT2:<"<root>">  ּ
+	{finiteconsonantprefix $perfective} = ה  ְ METATH:<leader ROOT1:<"<root>">>
+	{finiteconsonantprefix $imperfective} =  ְ METATH:<leader ROOT1:<"<root>">>
+	{vowel1} =  ַ 
+	{vowel1 pausal} =  ָ ́ % וּארָ́תְתִּ
+	{vowel2 $imperfective} =  ֵ 
+		{vowel2 $imperfective g3} =  ַ 
+	{vowel2 $perfective} =  ַ 
+		{vowel2 $perfective 3 sg masc !g3 !y3} =  ֵ
+		{vowel2 $perfective 3 sg masc !g3 !y3 connected} =  ֶ 
+		{vowel2 $perfective !3 y3} =  ִי % תָילִּ́גַּתְהִ
+		{vowel2 $perfective 1 sg y3} =  ֵי % יתִילֵּ́גַּתְהִ
+		{vowel2 $perfective a3} =  ֵ % תָאצֵּמַתְהִ
+		{vowel2 $perfective 3 y3} =  ָה % הלָּגַּתְהִ
+		{vowel2 $imperfective y3} =  ֶה % הלֶּגַּתְיִ
+		{vowel2 $imperfective pl fem y3} =  ֶי % הנָילֶּ́גַּתְתִּ
+	{cons3 y3} =
+	{participleprefix} = מ  ִ METATH:<leader ROOT1:<"<root>">>  ְ
+	{participle passive} = -
+	% {partvowel1 active} =  ַ % by default
+	% {partvowel2 active} =  ֵ % by default
+		{partvowel2 g3} =  ֵ
+		{partvowel2 y3} =  ֶה % הלֶּגַּתְמִ
+	.
+
+% end of binyanim }
+
+
+TEST: % for debugging purposes
+	% Strong verbs
+		<> = "QAL1TEST" | "QAL2TEST" | "QAL3TEST" | "NIPHALTEST" | "PIELTEST" | "PUALTEST" | "HIPHILTEST" | "HOPHALTEST" | "HITHPAELTEST"
+	% Guttural in the first letter.
+		% <> = "QAL1G1TEST" | "NIPHALG1TEST" | "HIPHILG1TEST" | "HOPHALG1TEST" 
+	% Guttural in the second letter.
+		% <> = "QALG2TEST" | "NIPHALG2TEST" | "PIELG2TEST" | "PUALG2TEST" | "HITHPAELG2TEST"
+	% Guttural in the third letter.
+		% <> = "QALG3TEST" | "NIPHALG3TEST" | "PIELG3TEST" | "PUALG3TEST" | "HIPHILG3TEST" | "HOPHALG3TEST" | "HITHPAELG3TEST"
+	% Nun in the first letter (נ"פּ)
+		% <> = "QAL1N1TEST" | "QAL2N1TEST" | "NIPHALN1TEST" | "HIPHILN1TEST" | "HOPHALN1TEST"
+	% Aleph in the first letter (א"פּ)
+		% <> = "QALA1TEST" | "NIPHALA1TEST" | "HIPHILA1TEST" | "HOPHALA1TEST"
+	% Vov or yud in the first letter (ו"פּ and י"פּ)
+		% <> = "QALW1TEST" | "NIPHALW1TEST" | "HIPHILW1TEST" | "HOPHALW1TEST" | "QALY1TEST" | "HIPHILY1TEST"
+	% middle letter doubled (does not yet work)
+		% <> = "QAL1MGTEST" | "NIPHALMGTEST" | "HIPHILMGTEST" | "HOPHALMGTEST" | "PIELMGTEST" | "PUALMGTEST"
+	% Vov in the middle letter (ו"ע)
+		% <> = "QAL1W2TEST" | "NIPHALW2TEST" | "PIELW2TEST" | "PUALW2TEST" | "HIPHILW2TEST" | "HOPHALW2TEST" | "QAL1Y2TEST" | "NIPHALY2TEST"
+	% Alef in the last letter (א"ל)
+		% <> = "QAL1A3TEST" | "NIPHALA3TEST" | "PIELA3TEST" | "PUALA3TEST" | "HIPHILA3TEST" | "HOPHALA3TEST" | "HITHPAELA3TEST"
+	% Heh in the last letter (ה"ל)
+		% <> = "QAL1Y3TEST" | "NIPHALY3TEST" | "PIELY3TEST" | "PUALY3TEST" | "HIPHILY3TEST" | "HOPHALY3TEST" | "HITHPAELY3TEST"
+	% Complex cases
+		% <> = "Know" | "Advise" | "WakeUp" | "Illuminate" | "Brought" 
+		% <> = "WHMTEST"
+	% <> = "QAL1MGTEST" | "HIPHILMGTEST"
+	% <> =   "PASSIVEQALTEST" | "PASSIVEQALA1TEST" | "PASSIVEQALG1TEST" | "PASSIVEQALG2TEST" | "PASSIVEQALG3TEST" | "PASSIVEQALMGTEST" | "PASSIVEQALN1TEST" | "PASSIVEQALW1TEST" | "PASSIVEQALW2TEST" | "PASSIVEQALA3TEST"  | "PASSIVEQALY3TEST" 
+	.
+
+% { passive qal 
+
+#hide PASSIVEQALTEST .
+PASSIVEQALTEST:
+	<root> = ג מ ר
+	<> = PASSIVEQAL:<ANALYZE:<"<root>">>
+	.
+#hide PASSIVEQALA1TEST .
+PASSIVEQALA1TEST:
+	<root> = א כ ל
+	<> = PASSIVEQAL:<ANALYZE:<"<root>">>
+	.
+#hide PASSIVEQALG1TEST .
+PASSIVEQALG1TEST:
+	<root> = ע מ ד
+	<> = PASSIVEQAL:<ANALYZE:<"<root>">>
+	.
+#hide PASSIVEQALG2TEST .
+PASSIVEQALG2TEST: 
+	<root> = שׁ ח ט
+	<> = PASSIVEQAL:<ANALYZE:<"<root>">>
+	.
+#hide PASSIVEQALG3TEST .
+PASSIVEQALG3TEST: 
+	<root> = שׁ ל ח
+	<> = PASSIVEQAL:<ANALYZE:<"<root>">>
+	.
+#hide PASSIVEQALMGTEST .
+PASSIVEQALMGTEST: 
+	<root> = ס ב ב
+	<> = PASSIVEQAL:<ANALYZE:<"<root>">>
+	.
+#hide PASSIVEQALN1TEST .
+PASSIVEQALN1TEST: 
+	<root> = נ ג שׁ
+	<> = PASSIVEQAL:<ANALYZE:<"<root>">>
+	.
+#hide PASSIVEQALW1TEST .
+PASSIVEQALW1TEST: 
+	<root> = ו ס פ
+	<> = PASSIVEQAL:<ANALYZE:<"<root>">>
+	.
+#hide PASSIVEQALW2TEST .
+PASSIVEQALW2TEST: 
+	<root> = ק ו מ
+	<> = PASSIVEQAL:<ANALYZE:<"<root>">>
+	.
+#hide PASSIVEQALA3TEST .
+PASSIVEQALA3TEST: 
+	<root> = מ צ א
+	<> = PASSIVEQAL:<ANALYZE:<"<root>">>
+	.
+#hide PASSIVEQALY3TEST .
+PASSIVEQALY3TEST: 
+	<root> = ג ל י
+	<> = PASSIVEQAL:<ANALYZE:<"<root>">>
+	.
+
+% passive qal }
+
+QAL1TEST:
+	<root> = ג מ ר
+	% <root> = ק ט ל
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+QAL2TEST:
+	<root> = כ ב ד
+	<> = QAL2 
+	.
+QAL3TEST:
+	<root> = ק ט ננ
+	<> = QAL3 
+	.
+NIPHALTEST:
+	<root> = ק ט ל
+	% <root> = ג מ ר
+	<> = NIPHAL 
+	.
+PIELTEST:
+	<root> = ק ט ל
+	% <root> = ד ב ר 
+	<> = PIEL 
+	.
+PUALTEST:
+	<root> = ק ט ל
+	% <root> = ד ב ר 
+	<> = PUAL 
+	.
+HIPHILTEST:
+	<root> = ק ט ל
+	% <root> = ל ב שׁ
+	<> = HIPHIL 
+	.
+HOPHALTEST:
+	<root> = ק ט ל
+	% <root> = ל ב שׁ
+	<> = HOPHAL 
+	.
+HITHPAELTEST:
+	<root> = ק ט ל
+	% <root> = ל ב שׁ
+	% <root> = ז מ נ % needs methathesis
+	% <root> = צ ד ק % needs methathesis
+	<> = HITHPAEL 
+	.
+
+QAL1G1TEST:
+	<root> = ע מ ד
+	<> = QAL1
+	.
+NIPHALG1TEST:
+	<root> = ע מ ד
+	<> = NIPHAL:<g1>
+	.
+HIPHILG1TEST:
+	<root> = ע מ ד
+	<> = HIPHIL:<g1>
+	.
+HOPHALG1TEST:
+	<root> = ע מ ד
+	<> = HOPHAL 
+	.
+
+QALG2TEST: % heteroclite
+	<root> = שׁ ח ט
+	<> = QAL1:<g2>
+	.
+NIPHALG2TEST:
+	<root> = שׁ ח ט
+	<> = NIPHAL 
+	.
+PIELG2TEST:
+	<root> = ב ר כ
+	<> = PIEL 
+	.
+PUALG2TEST:
+	<root> = ב ר כ
+	<> = PUAL 
+	.
+HITHPAELG2TEST:
+	<root> = ב ר כ
+	<> = HITHPAEL 
+	.
+
+QALH3TEST:
+	<root> = ע שׂ ה
+	{narrative 3 sg masc} = REVERSE:<ו  ַ י  ּ  ַ  ́ ע  ַ שׂ>
+	% <root> = ק ט ל
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+QAL2TEST:
+	<root> = כ ב ד
+	<> = QAL2 
+	.
+QAL3TEST:
+	<root> = ק ט נ
+	<> = QAL3 
+	.
+NIPHALTEST:
+	<root> = ק ט ל
+	% <root> = ג מ ר
+	<> = NIPHAL 
+	.
+PIELTEST:
+	<root> = ק ט ל
+	% <root> = ד ב ר 
+	<> = PIEL 
+	.
+PUALTEST:
+	<root> = ק ט ל
+	% <root> = ד ב ר 
+	<> = PUAL 
+	.
+HIPHILTEST:
+	<root> = ק ט ל
+	% <root> = ל ב שׁ
+	<> = HIPHIL 
+	.
+HOPHALTEST:
+	<root> = ק ט ל
+	% <root> = ל ב שׁ
+	<> = HOPHAL 
+	.
+HITHPAELTEST:
+	<root> = ק ט ל
+	% <root> = ל ב שׁ
+	% <root> = ז מ נ % needs methathesis
+	% <root> = צ ד ק % needs methathesis
+	<> = HITHPAEL 
+	.
+QALG3TEST:
+	<root> = שׁ ל ח
+	<> = QAL1:<g3>
+	.
+NIPHALG3TEST:
+	<root> = שׁ ל ח
+	<> = NIPHAL:<g3>
+	.
+PIELG3TEST:
+	<root> = שׁ ל ח
+	<> = PIEL:<g3>
+	.
+PUALG3TEST:
+	<root> = שׁ ל ח
+	<> = PUAL 
+	.
+HIPHILG3TEST:
+	<root> = שׁ ל ח
+	<> = HIPHIL 
+	.
+HOPHALG3TEST:
+	<root> = שׁ ל ח
+	<> = HOPHAL 
+	.
+HITHPAELG3TEST:
+	<root> = שׁ ל ח
+	<> = HITHPAEL:<g3>
+	.
+
+#hide QAL1MGTEST QAL1MGTEST2 NIPHALMGTEST HIPHILMGTEST HOPHALMGTEST PIELMGTEST PUALMGTEST .
+QAL1MGTEST:
+	<root> = ס ב ב
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+QAL1MGTEST2:
+	<root> = ת מ מ
+	<> = QAL1
+	.
+NIPHALMGTEST:
+	<root> = ס ב ב
+	<> = NIPHAL:<ANALYZE:<"<root>">>
+	.
+HIPHILMGTEST:
+	<root> = ס ב ב
+	<> = HIPHIL:<ANALYZE:<"<root>">>
+	.
+HOPHALMGTEST:
+	<root> = ס ב ב
+	<> = HOPHAL:<ANALYZE:<"<root>">>
+	.
+PIELMGTEST:
+	<root> = ס ב ב
+	<> = PIEL:<ANALYZE:<"<root>">>
+	.
+PUALMGTEST:
+	<root> = ס ב ב
+	<> = PUAL:<ANALYZE:<"<root>">>
+	.
+
+#hide QAL1N1TEST QAL2N1TEST NIPHALN1TEST HIPHILN1TEST HOPHALN1TEST .
+QAL1N1TEST:
+	<root> = נ פ ל
+	<> = QAL1
+	.
+QAL2N1TEST:
+	<root> = נ ג שׁ % heteroclite
+	{$imperfective} = QAL2
+	{binyan} = qalhetero
+	<> = QAL1
+	.
+NIPHALN1TEST:
+	<root> = נ ג שׁ
+	<> = NIPHAL
+	.
+HIPHILN1TEST:
+	<root> = נ ג שׁ
+	<> = HIPHIL
+	.
+HOPHALN1TEST:
+	<root> = נ ג שׁ
+	<> = HOPHAL 
+	.
+
+#hide QALA1TEST NIPHALA1TEST HIPHILA1TEST HOPHALA1TEST .
+QALA1TEST:
+	<root> = א כ ל
+	<> = QAL1:<ANALYZE:<"<root>">>
+	{$imperfective} = QAL2:<$imperfective ANALYZE:<"<root>">> % heteroclite
+	.
+NIPHALA1TEST:
+	<root> = א כ ל
+	% <> = NIPHALG1
+	<> = NIPHAL:<g1>
+	.
+HIPHILA1TEST:
+	<root> = א כ ל
+	<> = HIPHIL:<g1>
+	.
+HOPHALA1TEST:
+	<root> = א כ ל
+	<> = HOPHAL
+	.
+
+#hide QALW1TEST NIPHALW1TEST HIPHILW1TEST HOPHALW1TEST  QALY1TEST HIPHILY1TEST .
+QALW1TEST:
+	<root> = ו שׁ ב
+	<> = QAL1:<w1>
+	.
+NIPHALW1TEST:
+	<root> = ו שׁ ב
+	<> = NIPHAL
+	.
+HIPHILW1TEST:
+	<root> = ו שׁ ב
+	<> = HIPHIL
+	.
+HOPHALW1TEST:
+	<root> = ו שׁ ב
+	<> = HOPHAL
+	.
+QALY1TEST:
+	<root> = י ט ב
+	{$imperfective} = QAL2
+	<> = QAL1
+	.
+HIPHILY1TEST:
+	<root> = י ט ב
+	<> = HIPHIL:<ANALYZE:<"<root>">>
+	.
+
+#hide QAL1W2TEST PIELW2TEST PUALW2TEST NIPHALW2TEST HIPHILW2TEST HOPHALW2TEST.
+QAL1W2TEST:
+	<root> = ק ו מ
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+PIELW2TEST:
+	<root> = ק ו מ
+	% <root> = ר ו צ
+	<> = PIEL:<w2 y2>
+	% <> = PIEL:<ANALYZE:<"<root>">>
+	.
+PUALW2TEST:
+	<root> = ק ו מ
+	% <root> = ר ו צ
+	<> = PUAL:<w2>
+	.
+NIPHALW2TEST:
+	<root> = ק ו מ
+	<> = NIPHAL:<ANALYZE:<"<root>">>
+	.
+HIPHILW2TEST:
+	<root> = ק ו מ
+	<> = HIPHIL:<w2>
+	.
+HOPHALW2TEST:
+	<root> = ק ו מ
+	<> = HOPHAL:<w2>
+	.
+
+#hide QAL1A3TEST NIPHALA3TEST PIELA3TEST PUALA3TEST HIPHILA3TEST HOPHALA3TEST HITHPAELA3TEST .
+QAL1A3TEST:
+	<root> = מ צ א
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+NIPHALA3TEST:
+	<root> = מ צ א
+	<> = NIPHAL:<ANALYZE:<"<root>">>
+	.
+PIELA3TEST:
+	<root> = מ צ א
+	<> = PIEL:<ANALYZE:<"<root>">>
+	.
+PUALA3TEST:
+	<root> = מ צ א
+	<> = PUAL:<ANALYZE:<"<root>">>
+	.
+HIPHILA3TEST: 
+	<root> = מ צ א
+	<> = HIPHIL:<ANALYZE:<"<root>">>
+	.
+HOPHALA3TEST:
+	<root> = מ צ א
+	<> = HOPHAL:<ANALYZE:<"<root>">>
+	.
+HITHPAELA3TEST: 
+	<root> = מ צ א
+	<> = HITHPAEL:<ANALYZE:<"<root>">>
+	.
+
+#hide QAL1Y3TEST NIPHALY3TEST PIELY3TEST PUALY3TEST HIPHILY3TEST HOPHALY3TEST HITHPAELY3TEST .
+
+QAL1Y3TEST:
+	<root> = ג ל י
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+
+NIPHALY3TEST:
+	<root> = ג ל י
+	<> = NIPHAL:<ANALYZE:<"<root>">>
+	.
+
+PIELY3TEST:
+	<root> = ג ל י
+	<> = PIEL:<ANALYZE:<"<root>">>
+	.
+
+PUALY3TEST:
+	<root> = ג ל י
+	<> = PUAL:<ANALYZE:<"<root>">>
+	.
+
+HIPHILY3TEST:
+	<root> = ג ל י
+	<> = HIPHIL:<ANALYZE:<"<root>">>
+	.
+
+HOPHALY3TEST:
+	<root> = ג ל י
+	<> = HOPHAL:<ANALYZE:<"<root>">>
+	.
+
+HITHPAELY3TEST:
+	<root> = ג ל י
+	<> = HITHPAEL:<ANALYZE:<"<root>">>
+	.
+
+#hide QAL1Y2TEST NIPHALY2TEST .
+
+QAL1Y2TEST:
+	% <root> = ב י נ
+	% <root> = ג י ל
+	<root> = שׂ י מ
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+
+NIPHALY2TEST:
+	<root> = ב י נ
+	<> = NIPHAL:<ANALYZE:<"<root>">>
+	.
+
+#hide QALH3TEST PIELH3TEST HIPHILH3TEST HITHPAELH3TEST .
+QALH3TEST: 
+	<root> = ת מ ה
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+PIELH3TEST: 
+	% <root> = כ מ ה
+	<root> = א װ ה % desire
+	<> = PIEL:<ANALYZE:<"<root>">>
+	.
+HIPHILH3TEST: 
+	<root> = ג ב ה
+	<> = HIPHIL:<ANALYZE:<"<root>">>
+	.
+HITHPAELH3TEST: 
+	<root> = מ מ ה
+	<> = HITHPAEL:<ANALYZE:<"<root>">>
+	.
+
+#hide WHMTEST .
+WHMTEST: % for individual cases of WHM
+	<root> =  א כ ל
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+
+% complex cases
+#hide Know Advise Illuminate Brought WakeUp .
+Know: % w1 g3
+	<root> = ו ד ע
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+Advise: % w1 g2
+	<root> = ו ע צ
+	<> = QAL1:<ANALYZE:<"<root>">>
+	.
+WakeUp: % g1 w2 not right yet
+	<root> = ע ו ר
+	<> = NIPHAL:<ANALYZE:<"<root>">>
+	.
+Illuminate: % g1 w2
+	<root> = א ו ר
+	<> = HIPHIL:<ANALYZE:<"<root>">>
+	.
+Brought: % w2 a3
+	<root> = ב ו א
+	<> = HOPHAL:<ANALYZE:<"<root>">>
+	.
+
+#hide ANALYZE .
+ANALYZE: % given the root; we substitute in nc (neutral consonant) to avoid recursion.
+	<א $letter#2 $letter#3> = a1 g1 <nc1 $letter#2 $letter#3>
+	<י $letter#2 $letter#3> = y1 <nc1 $letter#2 $letter#3>
+	<נ $letter#2 $letter#3> = n1 <nc1 $letter#2 $letter#3>
+	<ו $letter#2 $letter#3> = w1 <nc1 $letter#2 $letter#3>
+	<$guttural $letter#2 $letter#3> = g1 <nc1 $letter#2 $letter#3>
+	<$letter#1 ו $letter#3> = w2 y2 <$letter#1 nc2 $letter#3>
+	<$letter#1 י $letter#3> = y2 <$letter#1 nc2 $letter#3>
+	<$letter#1 $guttural $letter#3> = g2 <$letter#1 nc2 $letter#3>
+	<$letter#1 $letter#2 א ++> = a3 <$letter#1 $letter#2 nc3>
+	<$letter#1 $letter#2 י ++> = y3 <$letter#1 $letter#2 nc3>
+	<$letter#1 $letter#2 ה ++> = g3 <$letter#1 $letter#2 nc3>
+	<$letter#1 $letter#2 $guttural> = g3 <$letter#1 $letter#2 nc3>
+	<$letter#1 $letter#2 $letter#2 +1> = mg <$letter#1 $letter#2 ד> % might lose g3 info
+	<> = 
+	.
+
+#show <binyan> .
+#show <analysis> .
+% #show <$tense :: $gender :: $number :: $person>  .  % students' order
+% #show <$tense :: $number :: $person :: $gender>  . % linguists' order
+% #show <narrative :: $number :: $person :: $gender>  . % linguists' order
+% #show <$tense :: $number :: $person :: $gender>  . % linguists' order
+#show <perfect :: $number :: $person :: $gender >  . % linguists order
+#show <imperfect :: $number :: $person :: $gender >  . % linguists order
+% #show <imperfect pl 2 masc> . % individual debugging run
+#show <participle> .
+
+% vim:filetype=KATR tw=10000 delcombine keymap=yi nospell:

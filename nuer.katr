@@ -1,0 +1,332 @@
+/*
+Nuer.
+    Bentiu dialect of Nuer (Nilo-Saharan)
+
+Authors: based on work by Irina Monich, Matthew Baerman, Tatiana Reid,
+    Oliver Bond (University of Surrey), Bert Remijsen (University of Edinburgh)
+
+Encoded by Raphael Finkel 5/2016
+Orthography of vowels
+    length is shown by 1, 2, or 3 identical graphemes in a row.
+    diphthongs are shown by the first grapheme followed by
+        as many second graphemes as needed to show length (1, 2, or 3).
+    tone is shown by an obligatory mark on the first grapheme
+    put combining breath mark ( ̤) before tone mark ( ̀ ́ ̂)
+A lexeme may belong independently to a tone class (mandatory), lenition class
+    (optional), transitive class (optional)
+Tone class
+    Each class has 6 tones
+    applying to the first and second syllable respectively of 1,2SG, 3SG, PL
+    In most cases, 3SG has the same pattern as 1,2SG
+    Notation: L low, H high, R rising, F falling
+    1: H L H L H F % receive, wait
+    2: H L H L R F % beat, blacken, write, jump, sing, cane (strike?)
+    3: F L F L F F % drink
+    4: F L F L R F % abstain, think, hold (remember? do? compensate?)
+    5: L H R F R F % see (buy? dodge? eat?)
+    6: L H R F L L   % collect
+    7: L H L H H L   % work
+    8: L H L H L L   % grab (recognize?)
+Lenition class
+    If VN (vowel-quantity modification, which happens in the plural) does *not*
+    cause lenition, indicate by class "nolenite".
+Transitive class
+    Transitive verbs have a vowel-quality modification in 3PL.  Indicate by
+    class "transitive".
+*/
+
+#hideInternal .
+
+#atom O .
+#atom N . % vowel quantity
+#atom M . % vowel quantity
+#atom Q . % vowel quality
+#atom H . % high tone
+#atom L . % low tone
+#atom R . % rising tone
+#atom F . % falling tone
+
+#hide CLASS TRANS LENITE .
+
+VERB:
+	<> = "<stem>" VN VL TM1 PN TM2 
+	{class} = CLASS 
+	{trans} = TRANS 
+	{lenite} = LENITE
+	{1 sg exclusive} = !
+	{2 exclusive} = !
+	{3 exclusive} = !
+	.
+
+CLASS:
+	{ic1} = class, 1 , h l ( h l ) h f 
+    {ic2} = class, 2 , h l ( h l ) r f 
+    {ic3} = class, 3 , f l ( f l ) f f 
+    {ic4} = class, 4 , f l ( f l ) r f 
+    {ic5} = class, 5 , l h ( r f ) r f 
+    {ic6} = class, 6 , l h ( r f ) l l 
+    {ic7} = class, 7 , l h ( l h ) h l 
+    {ic8} = class, 8 , l h ( l h ) l l 
+	.
+
+TRANS:
+	{transitive} = transitive
+	{} = intransitive
+	.
+
+LENITE:
+	{nolenite} = unlenited
+	{} = lenited 
+	.
+
+VN:
+	{pl} = N 
+	{nolenite pl} = O
+	<> =
+	.
+
+VL:
+	{1 sg} = Q
+	{1 pl} = Q
+	{2 pl} = Q
+	{transitive 3 pl} = Q
+	<> = 
+	.
+
+TM1:
+	{ic1 sg} = H
+	{ic2 sg} = H
+	{ic3 sg} = F
+	{ic4 sg} = F
+	{sg} = L
+	{ic5 sg 3} = R
+	{ic6 sg 3} = R
+	{ic1 pl} = H
+	{ic7 pl} = H
+	{ic2 pl} = R
+	{ic4 pl} = R
+	{ic5 pl} = R
+	{ic3 pl} = F
+	{ic6 pl} = L
+	{ic8 pl} = L
+	.
+
+PN:
+	{1 sg} = a̤ ¹
+	{2 sg} = i ¹
+	{3 sg} = ɛ ¹
+	{1 pl exclusive} = k ɔ ¹
+	{1 pl inclusive} = n ɛ ¹
+	{2 pl} = ɛ ¹
+	{3 pl} = k ɛ ¹
+	{} =
+	.
+
+TM2:
+    {ic1 sg} = L
+	{ic2 sg} = L
+    {ic3 sg} = L
+	{ic4 sg} = L
+    {ic5 sg} = H
+	{ic6 sg} = H
+    {ic7 sg} = H
+	{ic8 sg} = H
+    {ic5 sg 3} = F
+	{ic6 sg 3} = F
+    {ic1 pl} = F
+	{ic2 pl} = F
+    {ic3 pl} = F
+	{ic4 pl} = F
+    {ic5 pl} = F
+    {ic6 pl} = L
+    {ic7 pl} = L
+    {ic8 pl} = L
+	.
+
+/* { verb lexicon 
+
+Beat:
+	<> = VERB:<transitive ic2>
+	<stem> = p ɔ ² d % full inflection shown in table
+	.
+
+Buy:
+	<> = VERB:<transitive ic5>
+	<stem> = k ɔ ¹ ɣ
+.
+
+Strike:
+	<> = VERB:<transitive ic2>
+	<stem> = p i ¹ m
+	.
+
+Remember:
+	<> = VERB:<ic4>
+	<stem> = t i ² m
+	.
+
+Blacken:
+	<> = VERB:<transitive ic2>
+	<stem> = c u ² l
+	.
+
+Write:
+	<> = VERB:<transitive ic2>
+	<stem> = g ɔ ² r
+	.
+
+Abstain:
+	<> = VERB:<transitive ic4>
+	<stem> = t̪ ɛ ² ɣ
+	.
+
+Collect:
+	<> = VERB:<transitive ic6>
+	<stem> = d o ² l
+	.
+
+Dodge:
+	<> = VERB:<transitive ic5>
+	<stem> = k ɔ ² l
+	.
+
+Do:
+	<> = VERB:<ic4>
+	<stem> = l ɛ ² l
+	.
+
+Compensate:
+	<> = VERB:<transitive ic4>
+	<stem> = c o ² l
+	.
+
+Jump:
+	<> = VERB:<transitive ic2>
+	<stem> = b a̤ ³ l
+	.
+
+See:
+	<> = VERB:<ic5>
+	<stem> = n e̤ ² n
+	.
+
+Drink:
+	<> = VERB:<transitive ic3>
+	<stem> = m a ³ d̪
+	.
+
+Eat:
+	<> = VERB:<transitive ic5>
+	<stem> = c a ² m
+	.
+
+Think:
+	<> = VERB:<ic4>
+	<stem> = c a ³ r
+	.
+
+Receive:
+	<> = VERB:<ic1 nolenite>
+	<stem> = k a ² b
+	.
+
+Work:
+	<> = VERB:<transitive ic7>
+	<stem> = l a̤ ¹ d
+	.
+
+Wait:
+	<> = VERB:<transitive ic1>
+	<stem> = l i ² b
+	.
+
+Sing:
+	<> = VERB:<transitive ic2>
+	<stem> = k i ² d
+	.
+
+Hold:
+	<> = VERB:<transitive ic4>
+	<stem> = t̪ a ² ɣ
+	.
+
+Grab:
+	<> = VERB:<transitive ic8>
+	<stem> = m a ¹ y
+	.
+
+Recognize:
+	<> = VERB:<ic8>
+	<stem> = ŋ ɛ̤ ¹ y
+	.
+
+/* verb lexicon } */
+
+/* { sandhi rules */
+
+#vars $tone:  ̀  ́  ̂  ̌ . % no neutral tone.
+#vars $vowel:  i i e ɛ a ɔ o u i̤ e̤ ɛ̤ a̤ ɔ̤ o̤ ṳ .
+#vars $length: ¹ ² ³ .
+#vars $consonant:  b ç d d̪ f g h k l m n p r r̥ s t̪ v z y ɣ ŋ j .
+
+% σ rules (must come before palatalization)
+% #sandhi õõ ǥǥ σ => õ kk .
+% VN vowel quantity
+#sandhi $vowel ³ $consonant N => $1 ² $2 M .
+#sandhi $vowel ² $consonant N => $1 ¹ $2 M .
+#sandhi $vowel ³ $consonant O => $1 ² $2 . % no lenition
+#sandhi $vowel ² $consonant O => $1 ¹ $2 . % no lenition
+#sandhi M => N .
+% VN consonant
+#sandhi b N => f . % SOAS presentation says p, not b
+#sandhi d N => r̥ . % SOAS presentation says t, not d, and ř, not r̥
+#sandhi ɣ N => h . % sometimes → k at word end.
+#sandhi j N => ç . % SOAS and ACAL presentations says j, not y
+#sandhi N =>  .
+#sandhi M => N .
+% VL rule 1
+#sandhi i $length $consonant Q => iɛ $1 $2 .
+#sandhi i̤ $length $consonant Q => i̤ɛ $1 $2 .
+#sandhi u $length $consonant Q => uɔ $1 $2 .
+#sandhi ṳ $length $consonant Q => ṳɔ $1 $2 .
+% VL rule N
+#sandhi ɔ $length $consonant Q => ɔa $1 $2 .
+#sandhi ɛ $length $consonant Q => ɛa $1 $2 .
+% VL rule 3
+#sandhi o $length $consonant Q => oɔ $1 $2 .
+#sandhi o̤ $length $consonant Q => o̤ɔ $1 $2 .
+% VL rule 4
+#sandhi a̤ $length $consonant Q => a $1 $2 .
+% VL rules 5 and 6 are absense of modification
+#sandhi Q =>  . 
+% tonal melody
+#sandhi $vowel* $length $consonant H => $1́ $2 $3 . 
+#sandhi $vowel* $length $consonant L => $1̀ $2 $3 . 
+#sandhi $vowel* $length $consonant R => $1̌ $2 $3 . 
+#sandhi $vowel* $length $consonant F => $1̂ $2 $3 . 
+% repeated, because needed twice
+#sandhi $vowel $length H => $1́ $2 . 
+#sandhi $vowel $length L => $1̀ $2 . 
+#sandhi $vowel $length R => $1̌ $2 . 
+#sandhi $vowel $length F => $1̂ $2 . 
+% euphony
+#sandhi h k => k  . % t̪ɛ̌ahkɛ̂ → t̪ɛ̌akɛ̂
+% spelling
+#sandhi $vowel$vowel$tone ¹ => $1 $3 $2.
+#sandhi $vowel$vowel$tone ² => $1 $3 $2 $2 .
+#sandhi $vowel$vowel$tone ³ => $1 $3 $2 $2 .
+#sandhi $vowel$tone ¹ => $1 $2 .
+#sandhi $vowel$tone ² => $1 $2 $1 .
+#sandhi $vowel$tone ³ => $1 $2 $1 $1 .
+
+/* end of sandhi rules } */
+
+#vars $person: 1 2 3 .
+#vars $number: sg pl .
+#vars $clusive: inclusive exclusive .
+
+% verbs
+#show <class> .
+#show <trans> .
+#show <lenite> .
+#show <$clusive :: $person :: $number>  .

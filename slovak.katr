@@ -1,0 +1,604 @@
+% Slovak, started 3/30/2005, Raphael Finkel.
+% Ref: http://www.absoluteastronomy.com/encyclopedia/S/Sl/Slovak_language.htm
+% Ref: http://dent.ii.fmph.uniba.sk/ui/dict.html (dictionary)
+% Ref: Practical Slovak Grammer, Joseph J. Konuš, zelbstfarlag, Pittsburgh, 1939
+
+% markers
+#vars $number: sg pl .
+#vars $person: 1 2 3 .
+#vars $tense: present future preterite pluperfect .
+#vars $voice: active passive .
+#vars $mood: indicative subjunctive . % imperative is treated specially
+#vars $case: nominative genitive dative accusative locative instrumental .
+
+% vowels
+#vars $longVowel: á é í ó ý ú ŕ ĺ ia ie iu ô .
+#vars $vowel: a á ä e é i í o ó y ý u ú r ŕ l ĺ .
+#vars $diphthong: ia ie iu ô .
+
+% consonants
+#vars $consonant:  b c č d ď dz dž f g h ch j k l ľ ĺ m n ň p q r ŕ s š t ť v w x z ž .
+#vars $softConsonant:  c č ď dz dž j ľ ĺ ň ŕ š ť ž .
+
+#vars $letter: $vowel + $consonant .
+
+% classifiers
+#vars $partsOfSpeech: verb noun .
+#vars $masculine: animateNotA animateA inanimateNotSoft inanimateSoft .
+	#vars $animate: animateA animateNotA .
+	#vars $inanimate: inanimateSoft inanimateNotSoft .
+#vars $feminine: femNotSoft femSoft femOther femCSPVSt .
+
+% special letters: 207e=⁾ 
+
+#hide Shorten .
+Shorten: % needed by Sandhi
+	<á> = a
+	<é> = e
+	<í> = i
+	<ý> = y
+	<ú> = u
+	<ŕ> = r % unsure
+	<ĺ> = l % unsure
+	<ia> = <a> % unsure
+	<ie> = <e> % unsure
+	<iu> = <u> % unsure
+	<ô> = <o>
+	.
+
+#hide Sandhi .
+Sandhi:
+	% default rules
+	<$letter> = $letter <> 
+	<⁾> =
+	% lengthening rules
+	<i i> = í <>
+	<a a> = á <>
+%	<j i> = j <>
+	% spelling rules
+	<ň e> = <n e>
+	<ď e> = <d e>
+	<ť e> = <t e>
+	<ĺ e> = <l e>
+	<ľ e> = <l e>
+	% apparent spelling
+%	<ť i> = <t i>
+%	<ť í> = <t í>
+%	<ň i> = <n i>
+%	<ň í> = <n í>
+	% rhythm: cannot have long followed by long
+%	<$longVowel#1 $consonant $longVowel#2> = <Shorten:<$longVowel#1> $consonant $longVowel#2> 
+	% boundary rules
+%	<e $consonant iotate> = <i e $consonant>
+%	<iotate> = <>
+	% omission of iej
+%	<ú j ú> = <ú> % minújú -> minú
+%	<s j> = <š> %
+%	<j e j> = <j> % pracujejú -> pracujú
+%	<i e j> = <> % nesiejú -> nesú
+%	<ň e j> = <n> % padňejú -> padnú
+%	<m i e j> = <m e j> % rozumiejú -> rozumejú
+	% addition of j
+%	<y e> = <y j e> % kryem -> kryjem
+	.
+
+#hide AdjectiveEnding .
+AdjectiveEnding: % assume masculine
+	{sg} = 
+	{pl} = i % unknown
+	.
+
+#hide PassiveAdjectiveEnding .
+PassiveAdjectiveEnding: % assume masculine
+	{sg} = ý
+	{pl} = í
+	.
+
+#hide NounEnding .
+NounEnding: 
+	% nominative
+		{nominative animateNotA sg} =  
+		{nominative animateNotA pl} = i
+		{nominative animateA sg} = a 
+		{nominative animateA pl} = o v i a 
+		{nominative inanimateNotSoft sg} =  
+		{nominative inanimateNotSoft pl} = y  
+		{nominative inanimateSoft sg} =  
+		{nominative inanimateSoft pl} = e 
+		{nominative femNotSoft sg} = a
+		{nominative femNotSoft pl} = y 
+		{nominative femSoft sg} = a
+		{nominative femSoft pl} = e 
+		{nominative femOther sg} = 
+		{nominative femOther pl} = e 
+		{nominative femCSPVSt sg} = 
+		{nominative femCSPVSt pl} = i 
+	% accusative
+		{accusative animateNotA sg} = a
+		{accusative animateNotA pl} = o v
+		{accusative animateA sg} = u 
+		{accusative animateA pl} = o v
+		{accusative/nominative $inanimate} =+= <>
+		{accusative femNotSoft sg} = u
+		{accusative femNotSoft pl} = y 
+		{accusative/nominative femOther} =+= <> 
+		{accusative femSoft sg} = u
+		{accusative femSoft pl} = e 
+		{accusative/nominative femCSPVSt} =+= <> 
+	% genitive
+		{genitive/accusative $animate} =+= <>
+		{genitive $inanimate sg} = a
+		{genitive $inanimate pl} = o v  
+		{genitive femNotSoft sg} = e
+		{genitive femNotSoft pl} = iotate 
+		{genitive femSoft sg} = e
+		{genitive femSoft pl} = 
+		{genitive femOther sg} = e
+		{genitive femOther pl} = í
+		{genitive femCSPVSt sg} = i
+		{genitive femCSPVSt pl} = í
+	% locative
+		{locative $animate sg} = o v i
+		{locative $masculine pl} = o ch
+		{locative inanimateNotSoft sg} = e
+		{locative inanimateSoft sg} = i 
+		{locative femNotSoft sg} = e
+		{locative femNotSoft pl} = á ch
+		{locative femSoft sg} = i
+		{locative femSoft pl} = i a ch
+		{locative femOther/femSoft} =+= <>
+		{locative femCSPVSt/femSoft} =+= <>
+	% dative
+		{dative $animate sg} = o v i
+		{dative $masculine pl} = o m
+		{dative $inanimate sg} = u
+		{dative femNotSoft sg} = e
+		{dative femNotSoft pl} = á m
+		{dative femSoft sg} = i
+		{dative femSoft pl} = i a m
+		{dative femOther/femSoft} =+= <>
+		{dative femCSPVSt/femSoft} =+= <>
+	% instrumental
+		{instrumental $masculine sg} = o m
+		{instrumental animateNotA pl} = m i
+		{instrumental animateA pl} = a m i
+		{instrumental $inanimate pl} = m i  
+		{instrumental $feminine sg} = o u
+		{instrumental $feminine pl} = a m i
+	.
+
+#hide BOL .
+BOL:
+	{pl} = boli
+	{sg} = bol
+.
+
+#hide BYVAL .
+BYVAL:
+	{pl} = bývali
+	{sg} = býval
+.
+
+AuxiliaryBe:
+	{3} =
+	<> = Be:<present>
+	.
+
+Future:
+	{perfective} = "<present>"
+	{imperfective} = "WillBe:<present>" , "<infinitive>"
+.
+
+#hide Verb .
+Verb: 
+	<3plStem> = "<3plTheme>"
+	<3plTheme> = "<root>"
+	<presStem> = "<presTheme>"
+	<infinTheme> = "<presTheme>"
+	<infinStem> = "<infinTheme>" e
+	<presTheme> = "<root>"
+	<passivePartTheme> = "<infinTheme>"
+	<passiveAffix> = n
+	{present} = Sandhi:<"<presStem>" "<verbEnding>" ⁾>
+	{present indicative 3 pl active} == Sandhi:<"<3plStem>" "<verbEnding 3 pl>" ⁾>
+	<partOfSpeech> = verb
+	{infinitive ++} = Sandhi:<"<infinStem>" ť ⁾>
+	<separator> = ***
+	{past} = "<lform>"
+	<lstem> = "<infinStem>"
+	<lform> = "<lstem>" l AdjectiveEnding  % should invoke Sandhi
+	{indicative active future} = Future:<"<aspect>">
+	{indicative active preterite} = "<lform>" , AuxiliaryBe
+	{indicative active pluperfect} = BOL , AuxiliaryBe , "<lform>"
+	{indicative passive present} = Be:<active present> , <passiveParticiple>
+	{indicative passive preterite} = BOL , AuxiliaryBe , <passiveParticiple>
+	{indicative passive pluperfect} = BYVAL , AuxiliaryBe , <passiveParticiple>
+	% TODO: BYVAL is iterativeBe:<lform>
+	{indicative passive future} = "WillBe:<present indicative active>" , <passiveParticiple>
+	{subjunctive pluperfect} = !
+	{subjunctive future} = !
+	{subjunctive active present} = "<lform>" , by , AuxiliaryBe
+	{subjunctive active preterite} = BOL , by , AuxiliaryBe , "<lform>"
+	{subjunctive passive present} = BOL , by , AuxiliaryBe , <passiveParticiple>
+	{subjunctive passive preterite} = BOL , by , AuxiliaryBe , BYVAL , <passiveParticiple>
+	{imperative active} = "<presTheme>" <imperativeEnding>
+	{imperative active 1 sg} = !
+	{imperative active 3 } = nech , <indicative active present 3 >
+	{imperative active 3 } = nech , <indicative active present 3 >
+	{imperative passive 2 sg} = bývaj/buď , "<passiveParticiple sg>"
+	% TODO: býval is iterativeBe:<imperative>
+	{imperative passive 1 pl} = bývajme/buďme , "<passiveParticiple pl>"
+	{imperative passive 2 pl} = bývajte/buďte , "<passiveParticiple pl>"
+	{passiveParticiple} = "<passivePartTheme>" "<passiveAffix>" PassiveAdjectiveEnding
+	{verbEnding 1 sg} = m
+	{verbEnding 1 pl} = m e
+	{verbEnding 2 sg} = š
+	{verbEnding 2 pl} = t e
+	{verbEnding 3 sg} = 
+	{verbEnding 3 pl} = ú
+	{imperativeEnding} = <verbEnding>
+	{imperativeEnding 2 sg} = 
+	.
+
+#hide ImperativeEnding .
+ImperativeEnding:
+	{2 sg} =
+	{2 pl} = Verb:<verbEnding 2 pl>
+	{1 pl} = Verb:<verbEnding 1 pl>
+	.
+
+Noun: 
+	<partOfSpeech> = noun
+	<separator> = ***
+	{} = Sandhi:<"<stem>" NounEnding ⁾>
+	.
+
+% tests
+Test: 
+	% verbs
+	% <> = "Be" | "Have" | "Labor" | "Carry" | "Hide" | "Hiding" | "Cover" | "Reap" | "Rub" | "Spend" | "Fall" | "Understand" | "Suffer" | "Hold" | "Work" | "Return" | "Call" | "Returning" | "Comb" 
+	% <> = "Carry" | "Reap" | "Rub" | "Cover" | "Spend" | "Fall" | "Understand" | "Suffer" | "Hold" | "Work" | "Return"  | "Call" | "Returning" | "Comb" | "Take" | "Pour" | "Buying"
+	<> = "Carry"
+	% nouns: masculine
+	% <> = "Friend" | "Hero" | "Oak" | "Engine" 
+	% nouns: feminine
+	% <> = "Woman" | "Street" | "Dlan" | "Bone"
+	% nouns: all
+	% <> = "Friend" | "Hero" | "Oak" | "Engine" | "Woman" | "Street" | "Dlan" | "Bone"
+	% <> = "Dlan"
+	.
+
+% { vocabulary
+% { verbs
+% #hide Be WillBe Have Labor Carry Hide Hiding Dlan Bone Cover Reap Rub Spend Fall Understand Suffer Hold Work Return Call Returning Comb Take Pour Buying .
+
+Be:
+	<means> = be
+	<stem> = b
+	<stemVowel> = y
+	{present 1 sg} = s o m
+	{present 2 sg} = s i
+	{present 3 sg} = j e
+	{present 1 pl} = s m e
+	{present 2 pl} = s t e
+	{present 3 pl} = s ú
+	{future} = "WillBe:<present>"
+	<> = Verb:<perfective>
+	.
+
+WillBe:  % defective, just used as an auxiliary
+	<root> = b u d
+	<> = Class_0_0_e
+	.
+
+Have:
+	<stem> = m
+	<stemVowel> = á
+	<means> = have
+	<participlePart> = t ý
+	<> = Verb:<perfective>
+	.
+
+Labor:
+	<stem> = p r a c u j
+	<stemVowel> = e
+	<means> = labor
+	<infinStem> = p r a c o v a
+	<participlePart> = t ý
+	<> = Verb:<perfective>
+	.
+
+Class_0_0_e:
+	<> = Verb
+	<presStem> = Class_0_i_e
+	.
+
+Class_i:
+	<> = Verb
+	<presTheme> = "<root>" i
+	.
+
+Class_0_i_e:
+	<> = Class_i
+	<passiveAffix> = t
+	<presStem> = "<presTheme>" e
+	.
+
+Class_a_i:
+	<> = Class_i
+	<verbEnding 3 pl> = a 
+	<infinTheme> = "<presTheme>" 
+	{3plStem} = "<presTheme>" 
+	<presStem> = "<presTheme>" i
+	<passiveAffix> = n
+	.
+
+Class_0:
+	<> = Class_a_i
+	<infinStem> = "<presTheme>"
+	<passivePartTheme> = "<root>" e
+	.
+
+Class_u_i_e:
+	<> = Class_0_i_e
+	<infinStem> = Class_u_0_e
+	.
+
+Class_u_0_e:
+	<> = Class_0_0_e
+	<infinStem> = "<root>" ú 
+	.
+
+Class_a:
+	<> = Verb
+	<presStem> = "<presTheme>" a
+	<infinStem> = "<root>"
+	<3plStem> = "<3plTheme>" j
+       .
+
+Carry: % Class 1
+	<means> = carry
+	<infinStem> = n i e s
+	<root> = n e s
+	<participlePart> = t ý
+	<passivePartTheme> = <root> e
+	<passiveAffix> = n
+	<aspect> = imperfective
+	{lstem sg} = <infinStem> o 
+	{lstem pl} = <infinStem> 
+	<> = Class_0_i_e
+	.
+
+Hide: % Class 1
+	<stem> = s k r y j
+	<stemVowel> = e
+	<means> = hide
+	<infinStem> = s k r y
+	<participlePart> = t ý
+	<> = Verb:<perfective>
+	.
+
+Hiding:
+	<stem> = s k r ý v
+	<stemVowel> = a
+	<means> = hiding
+	<participlePart> = n ý
+	<> = Verb:<imperfective>
+	.
+
+Cover: % Class 1
+	<root> = k r y j
+	<means> = cover
+	<infinStem> = k r y
+	<passivePartTheme> = <infinStem>
+	<passiveAffix> = t
+	<aspect> = imperfective
+	<> = Class_0_0_e
+	.
+
+Reap: % Class 1
+	<root> = ž n 
+	<means> = reap
+	<infinStem> = ž a
+	<passivePartTheme> = <infinStem>
+	<aspect> = imperfective
+	<> = Class_0_i_e
+	.
+
+Rub: % Class 1
+	<root> = t r 
+	<means> = rub
+	<aspect> = imperfective
+	<lstem> = <root> e
+	<passivePartTheme> = <lstem>
+	<> = Class_0_i_e
+	.
+
+Spend: % Class 2
+	<root> = m i n 
+	<means> = spend
+       <aspect> = perfective
+	<passivePartTheme> = <root> u
+	<> = Class_u_i_e
+	.
+
+Fall: % Class 2
+	<root> = p a d n
+	<means> = fall
+	<aspect> = perfective
+	<lstem> = p a d o
+	<passivePartTheme> = <root> u
+	<passiveAffix> = t
+	<> = Class_u_0_e
+	.
+
+Understand: % Class 3
+	{3plStem} = r o z u m e j
+	<root> = r o z u m 
+	<means> = understand
+	<aspect> = imperfective
+	<lstem> = <root> e
+	<passivePartTheme> = <root> e
+	<passiveAffix> = n
+	<> = Class_0_i_e 
+	.
+
+Suffer: % Class 3
+	<root> = t r p  
+	<means> = suffer
+	<aspect> = imperfective
+	<lstem> = <root> e
+	<passivePartTheme> = <root> e
+	<> = Class_a_i
+	.
+
+Hold: % Class 3
+	<root> = d r ž  
+	<means> = hold
+	<infinStem> = d r ž a
+	<aspect> = imperfective
+	<passivePartTheme> = <root> a
+	<> = Class_a_i
+	.
+
+Work: % Class 4
+	<root> = r o b 
+	<means> = work
+	<aspect> = imperfective
+	<> = Class_0
+	.
+
+Return: % Class 4
+	<root> = v r á t 
+	<means> = return
+	<aspect> = perfective
+	<presStem> = <presTheme>
+	<> = Class_0
+	.
+
+Call: % Class 5
+	<root> = v o l a
+	<means> = call
+	<aspect> = imperfective 
+	<> =Class_a
+	.
+
+Returning: % Class 5
+	<root> = v r a c 
+	<infinStem> = <root> a
+	<3plStem> = Class_a
+	<3plTheme> = "<infinStem>"
+	<presStem> = Class_a
+	<means> = returning
+	<aspect> = imperfective 
+	<passivePartTheme> = <root> a
+	<> = Class_i
+	.
+
+Comb: % Class 5
+	<root> = č e š
+	<means> = comb
+	<infinStem> = č e s a
+	<aspect> = imperfective
+	<passivePartTheme> = <infinStem>
+	<> = Class_0_0_e
+	.
+
+Take: % Class 5
+	<root> = b e r
+	<means> = take
+	<infinStem> = b r a
+	<aspect> = imperfective
+	<passivePartTheme> = <infinStem>
+	<> = Class_u_i_e
+	.
+
+Pour: % Class 5
+	<root> = l e j
+	<means> = pour
+	<infinStem> = l i a
+	<aspect> = imperfective
+	<passivePartTheme> = <infinStem>
+	<passiveAffix> = t
+	<> = Class_u_0_e
+	.
+
+Buying: % Class 6
+	<root> = k u p u j
+	<means> = buying
+	<infinStem> = k u p o v a
+	<aspect> = imperfective
+	<passivePartTheme> = <infinStem>
+	<> = Class_u_0_e
+	.
+
+% verbs }
+
+% { nouns
+
+#hide Friend Hero Oak Engine Woman Street
+
+Friend: 
+	<stem> = ch l a p
+	<means> = friend
+	<> = Noun:<animateNotA>
+	.
+
+Hero:
+	<stem> = h r d i n
+	<means> = hero
+	<> = Noun:<animateA>
+	.
+
+Oak:
+	<stem> = d u b
+	<means> = oak
+	<> = Noun:<inanimateNotSoft>
+	.
+
+Engine:
+	<stem> = s t r o j
+	<means> = engine
+	<> = Noun:<inanimateSoft>
+	.
+
+Woman: 
+	<stem> = ž e n
+	<means> = woman
+	<> = Noun:<femNotSoft>
+	.
+
+Street:
+	<stem> = u l i c
+	<means> = street
+	<> = Noun:<femSoft>
+	.
+
+Dlan:
+	<stem> = d l a ň
+	<means> = palm,of,hand
+	<> = Noun:<femOther>
+	.
+
+Bone:
+	<stem> = k o s ť
+	<means> = bone
+	<> = Noun:<femCSPVSt>
+	.
+
+% nouns }
+
+%  vocabulary }
+
+% show
+#show <means> .
+#show <partOfSpeech> .
+% #show <separator> .
+#show <infinitive> . % verbs
+#show <$mood $voice $tense $number $person> . % verbs
+% #show <imperative $voice $number $person> . % verbs
+% #show <indicative passive $tense $number $person> . % one verb form
+% #show <$number $case> . % nouns
+% #show <pl genitive> . % one noun form
+
+% vim:filetype=KATR textwidth=1000:
